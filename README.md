@@ -56,13 +56,13 @@
 
 - **런타임**: TypeScript + Node.js 기반 데몬 프로세스
 - **ORM**: TypeORM
-- **데이터베이스**: RDBMS (기본값 SQLite)
+- **데이터베이스**: PostgreSQL
 - **에이전트 오케스트레이션**: Paseo SDK (WebSocket 기반, `ws` / `wss`)
 - **배포**: Docker 컨테이너 (Paseo 자체도 컨테이너로 배포)
 
 ### 저장하는 데이터
 
-RDBMS에 다음 데이터를 저장합니다.
+PostgreSQL에 다음 데이터를 저장합니다.
 
 | 데이터 | 설명 |
 | --- | --- |
@@ -78,13 +78,15 @@ RDBMS에 다음 데이터를 저장합니다.
 | `PASEO_HOST` | Paseo가 동작하고 있는 서버의 host | `localhost` |
 | `USE_TLS` | TLS 사용 여부. `true`일 경우 `wss` 기반으로 연결 | `false` |
 | `BASE_BRANCH` | Paseo가 기본적으로 사용할 base branch | `dev` |
-| `DATABASE` | 사용할 데이터베이스 | `SQLite` |
+| `DB_HOST` | PostgreSQL host | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_USERNAME` / `DB_PASSWORD` / `DB_NAME` | PostgreSQL 접속 계정과 DB 이름 | (필수) |
 | `DEPLOYMENT` | 배포 환경 | `docker` |
 
 ## 배포
 
-- **Host OS 직접 실행** — Node.js 런타임 위에서 데몬 프로세스를 직접 구동합니다.
-- **Docker 기반 실행** — 애플리케이션과 Paseo를 각각 컨테이너로 배포합니다.
+- **Host OS 직접 실행** — Node.js 런타임 위에서 데몬 프로세스를 직접 구동합니다. 접속 가능한 PostgreSQL이 필요하며, 없다면 `docker compose up -d postgres`로 DB만 컨테이너로 띄워 `localhost:5432`로 붙을 수 있습니다.
+- **Docker 기반 실행** — 애플리케이션, Paseo, PostgreSQL을 각각 컨테이너로 배포합니다.
 
 각 방식의 상세 가이드는 구현 진행에 따라 추가될 예정입니다.
 

@@ -7,11 +7,5 @@ coverage/
 .env.*
 !.env.example
 
-data/*
-!data/.gitkeep
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal
-
 *.log
 .DS_Store

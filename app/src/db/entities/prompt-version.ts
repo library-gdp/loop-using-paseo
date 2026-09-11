@@ -17,7 +17,7 @@ export const PromptVersionEntity = new EntitySchema<PromptVersion>({
     version: { type: Number, unique: true },
     content: { type: "text" },
     description: { type: String, length: 512, nullable: true },
-    createdAt: { type: Date, createDate: true },
+    createdAt: { type: "timestamptz", createDate: true },
   },
   indices: [{ name: "IDX_prompt_version_version", columns: ["version"] }],
 });

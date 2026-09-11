@@ -4,7 +4,6 @@
 **/*.tsbuildinfo
 .git
 .github
-data
 .env
 .env.*
 !.env.example

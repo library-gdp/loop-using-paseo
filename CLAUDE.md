@@ -14,8 +14,8 @@ Paseo 위에서 GitHub Issue를 자동 처리하는 **데몬 프로세스**다.
 
 ## 아키텍처 상 유의점
 
-- **런타임**: TypeScript + Node.js 데몬. **ORM**: TypeORM. **DB**: RDBMS, 기본 SQLite.
-- **배포는 두 경로를 모두 지원**해야 한다: Host OS 직접 실행, 그리고 Docker 컨테이너(앱과 Paseo를 각각 컨테이너로). 어느 한쪽만 가정하는 변경은 피하라.
+- **런타임**: TypeScript + Node.js 데몬. **ORM**: TypeORM. **DB**: PostgreSQL.
+- **배포는 두 경로를 모두 지원**해야 한다: Host OS 직접 실행, 그리고 Docker 컨테이너(앱, Paseo, PostgreSQL을 각각 컨테이너로). 어느 한쪽만 가정하는 변경은 피하라.
 
 ## 환경변수
 
@@ -26,7 +26,7 @@ Paseo 위에서 GitHub Issue를 자동 처리하는 **데몬 프로세스**다.
 | `PASEO_HOST`            | `localhost`   |
 | `USE_TLS` (true면 `wss`) | `false`       |
 | `BASE_BRANCH`           | `dev`         |
-| `DATABASE`              | `SQLite`      |
+| `DB_HOST`               | `localhost`   |
 | `DEPLOYMENT`            | `docker`      |
 
 
