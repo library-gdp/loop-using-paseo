@@ -1,0 +1,56 @@
+# 앱과 Paseo를 각각 컨테이너로 띄운다.
+#   cp .env.example .env  후 값을 채우고  docker compose up -d --build
+services:
+  paseo:
+    build:
+      context: .
+      dockerfile: docker/paseo.Dockerfile
+      args:
+        PASEO_VERSION: "0.8.0"
+        # codex를 쓰려면 CODEX_VERSION을 채우고 CLAUDE_CODE_VERSION을 비운다.
+        CLAUDE_CODE_VERSION: "latest"
+        CODEX_VERSION: ""
+    init: true
+    environment:
+      PASEO_PASSWORD: ${PASEO_PASSWORD:-}
+      # AI 에이전트 인증 정보. 사용하는 에이전트 것만 채우면 된다.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME:-loop-using-paseo}
+      GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-loop@example.com}
+      GIT_COMMITTER_NAME: ${GIT_AUTHOR_NAME:-loop-using-paseo}
+      GIT_COMMITTER_EMAIL: ${GIT_AUTHOR_EMAIL:-loop@example.com}
+    volumes:
+      # 작업 대상 저장소. 호스트 경로(TARGET_REPO_PATH)를 PROJECT_PATH 위치에 붙인다.
+      - ${TARGET_REPO_PATH:-./target-repo}:/workspace/target-repo
+      # 데몬 상태와 worktree 메타데이터를 재기동 후에도 유지한다.
+      - paseo-home:/var/lib/paseo
+    ports:
+      # 호스트에서 직접 붙어 디버깅할 때만 필요하다. 운영에서는 지워도 된다.
+      - "127.0.0.1:6767:6767"
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    depends_on:
+      - paseo
+    env_file:
+      - .env
+    environment:
+      # .env 값보다 우선한다: 컨테이너 네트워크 기준으로 덮어쓴다.
+      PASEO_HOST: paseo
+      PASEO_PORT: "6767"
+      DEPLOYMENT: docker
+      SQLITE_PATH: /srv/app/data/loop.sqlite
+      # PROJECT_PATH는 paseo 컨테이너 안의 경로여야 한다.
+      PROJECT_PATH: ${PROJECT_PATH:-/workspace/target-repo}
+    volumes:
+      - app-data:/srv/app/data
+    restart: unless-stopped
+
+volumes:
+  paseo-home:
+  app-data:
