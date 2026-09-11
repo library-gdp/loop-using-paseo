@@ -5,6 +5,8 @@ const base = {
   GITHUB_TOKEN: "ghp_test",
   GITHUB_REPOSITORY: "library-gdp/loop-using-paseo",
   PROJECT_PATH: "/workspace/target",
+  DB_USERNAME: "loop",
+  DB_NAME: "loop",
 };
 
 describe("parseEnv", () => {
@@ -14,20 +16,22 @@ describe("parseEnv", () => {
     expect(env.PASEO_HOST).toBe("localhost");
     expect(env.USE_TLS).toBe(false);
     expect(env.BASE_BRANCH).toBe("dev");
-    expect(env.DATABASE).toBe("sqlite");
     expect(env.DEPLOYMENT).toBe("docker");
+    expect(env.DB_HOST).toBe("localhost");
+    expect(env.DB_PORT).toBe(5432);
   });
 
-  it("DATABASE=SQLite 처럼 대소문자가 섞여도 받아들인다", () => {
-    expect(parseEnv({ ...base, DATABASE: "SQLite" }).DATABASE).toBe("sqlite");
+  it("DEPLOYMENT=Docker 처럼 대소문자가 섞여도 받아들인다", () => {
+    expect(parseEnv({ ...base, DEPLOYMENT: "Docker" }).DEPLOYMENT).toBe("docker");
   });
 
   it("필수 값이 없으면 기동 전에 실패한다", () => {
     expect(() => parseEnv({})).toThrow(/GITHUB_TOKEN/);
   });
 
-  it("Postgres를 고르면 접속 정보를 요구한다", () => {
-    expect(() => parseEnv({ ...base, DATABASE: "Postgres" })).toThrow(/DB_HOST/);
+  it("PostgreSQL 접속 정보가 없으면 기동 전에 실패한다", () => {
+    const { DB_USERNAME: _user, DB_NAME: _name, ...withoutDb } = base;
+    expect(() => parseEnv(withoutDb)).toThrow(/DB_USERNAME[\s\S]*DB_NAME/);
   });
 });
 

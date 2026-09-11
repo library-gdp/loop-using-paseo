@@ -13,7 +13,7 @@ async function main(): Promise<void> {
   logger.info(
     {
       deployment: env.DEPLOYMENT,
-      database: env.DATABASE,
+      database: `${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`,
       agent: env.WORKER_AGENT,
       repository: env.GITHUB_REPOSITORY,
       baseBranch: env.BASE_BRANCH,

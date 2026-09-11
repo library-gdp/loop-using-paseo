@@ -32,8 +32,8 @@ export const ProcessedIssueEntity = new EntitySchema<ProcessedIssue>({
     promptVersion: { type: Number, nullable: true },
     summary: { type: "text", nullable: true },
     error: { type: "text", nullable: true },
-    startedAt: { type: Date },
-    finishedAt: { type: Date },
+    startedAt: { type: "timestamptz" },
+    finishedAt: { type: "timestamptz" },
   },
   uniques: [{ name: "UQ_processed_issue_repo_number", columns: ["repository", "issueNumber"] }],
 });

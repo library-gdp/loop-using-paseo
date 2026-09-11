@@ -1,5 +1,3 @@
-import { mkdirSync } from "node:fs";
-import { dirname, isAbsolute, resolve } from "node:path";
 import { DataSource, type DataSourceOptions } from "typeorm";
 import { type Env, getEnv } from "../config/env.js";
 import { entities } from "./entities/index.js";
@@ -11,40 +9,17 @@ import { entities } from "./entities/index.js";
 const migrations = [new URL("./migrations/*.js", import.meta.url).pathname];
 
 export function buildDataSourceOptions(env: Env = getEnv()): DataSourceOptions {
-  const common = {
+  return {
+    type: "postgres",
+    host: env.DB_HOST,
+    port: env.DB_PORT,
+    username: env.DB_USERNAME,
+    password: env.DB_PASSWORD,
+    database: env.DB_NAME,
     entities,
     migrations,
     synchronize: env.DB_SYNCHRONIZE,
     logging: env.DB_LOGGING,
-  } as const;
-
-  if (env.DATABASE === "postgres") {
-    return {
-      type: "postgres",
-      host: env.DB_HOST,
-      port: env.DB_PORT,
-      username: env.DB_USERNAME,
-      password: env.DB_PASSWORD,
-      database: env.DB_NAME,
-      ...common,
-    };
-  }
-
-  const file = isAbsolute(env.SQLITE_PATH)
-    ? env.SQLITE_PATH
-    : resolve(process.cwd(), env.SQLITE_PATH);
-  mkdirSync(dirname(file), { recursive: true });
-
-  return {
-    type: "better-sqlite3",
-    database: file,
-    // 데몬이 장시간 떠 있으므로 WAL + busy timeout으로 잠금 충돌을 줄인다.
-    prepareDatabase: (db) => {
-      db.pragma("journal_mode = WAL");
-      db.pragma("busy_timeout = 5000");
-      db.pragma("foreign_keys = ON");
-    },
-    ...common,
   };
 }
 
