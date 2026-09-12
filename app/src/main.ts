@@ -1,11 +1,11 @@
 import { getEnv } from "./config/env.js";
 import { createDataSource, initializeDataSource } from "./db/data-source.js";
-import { createGitHubClient } from "./github/client.js";
-import { IssuePoller } from "./github/issue-poller.js";
+import { IssueCollector } from "./issues/issue-collector.js";
+import { createIssueSource } from "./issues/issue-source-factory.js";
 import { logger } from "./logger.js";
 import { connectPaseo } from "./paseo/client.js";
 import { seedBuiltinPrompt } from "./prompts/prompt-service.js";
-import { startLoop } from "./scheduler/loop.js";
+import { startPollingLoop } from "./scheduler/poll-loop.js";
 import { IssueWorker } from "./worker/issue-worker.js";
 
 async function main(): Promise<void> {
@@ -17,6 +17,8 @@ async function main(): Promise<void> {
       agent: env.WORKER_AGENT,
       repository: env.GITHUB_REPOSITORY,
       baseBranch: env.BASE_BRANCH,
+      issueSource: env.ISSUE_SOURCE,
+      pollIntervalMs: env.POLL_INTERVAL_MS,
     },
     "loop-using-paseo 기동",
   );
@@ -24,14 +26,13 @@ async function main(): Promise<void> {
   const dataSource = await initializeDataSource(createDataSource(env));
   await seedBuiltinPrompt(dataSource);
 
-  const github = createGitHubClient(env);
   const paseo = await connectPaseo(env);
 
-  const poller = new IssuePoller(env, github, dataSource);
+  const collector = new IssueCollector(createIssueSource(env), dataSource);
   const worker = new IssueWorker(env, dataSource, paseo);
   await worker.recoverStaleRunning();
 
-  const job = startLoop({ cronExpression: env.POLL_CRON, poller, worker });
+  const loop = startPollingLoop({ intervalMs: env.POLL_INTERVAL_MS, collector, worker });
 
   let shuttingDown = false;
   const shutdown = async (signal: NodeJS.Signals) => {
@@ -39,7 +40,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info({ signal }, "종료 신호 수신, 정리 중");
 
-    job.stop();
+    await loop.stop();
     await paseo.close().catch((error) => logger.error({ err: error }, "Paseo 연결 종료 실패"));
     await dataSource.destroy().catch((error) => logger.error({ err: error }, "DB 종료 실패"));
 
