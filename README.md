@@ -76,6 +76,7 @@ PostgreSQL에 다음 데이터를 저장합니다.
 .
 ├── app/                    # TypeScript 데몬 (package.json은 여기에 있다)
 │   ├── src/main.ts         # 진입점
+│   ├── src/issues/         # 이슈 소스 인터페이스·구현체·수집기
 │   └── test/
 ├── docker/paseo.Dockerfile # Paseo 데몬 이미지
 ├── Dockerfile              # 앱 이미지 (build context는 저장소 루트)
@@ -234,7 +235,7 @@ node --env-file=../.env dist/main.js
 > [!NOTE]
 > 앱은 `.env`를 스스로 읽지 않습니다. Node의 `--env-file` 플래그로 넘겨야 합니다.
 > 그래서 `npm start`, `npm run dev`는 `.env` 값 없이 실행되고, `npm run dev -- --env-file=...`처럼 인자를 붙여도 동작하지 않습니다.
-> 셸에서 `.env`를 `source`하는 방법도 쓰지 마세요. `POLL_CRON=*/5 * * * *`처럼 공백이 들어간 값이 깨집니다.
+> 셸에서 `.env`를 `source`하는 방법도 쓰지 마세요. 따옴표나 공백이 들어간 값이 깨집니다.
 
 개발 중에는 파일 변경 시 자동으로 재시작하는 watch 모드를 씁니다.
 
@@ -279,10 +280,14 @@ journalctl -u loop-using-paseo -f
 loop-using-paseo 기동
 Paseo 데몬에 연결 중
 Paseo 데몬 연결 완료
-루프 스케줄러 시작
+폴링 루프 시작
 ```
 
-기동 직후 한 번 폴링하고, 이후에는 `POLL_CRON` 주기로 폴링합니다. 새 이슈를 찾으면 `이슈를 큐에 추가`, 처리가 끝나면 `이슈 처리 완료` 로그가 남습니다. 앞 사이클이 끝나지 않았으면 다음 사이클은 건너뜁니다.
+기동 직후 한 번 폴링하고, 이후에는 한 사이클이 끝날 때마다 `POLL_INTERVAL_MS`(기본 10초)만큼 쉬었다가 다음 사이클을 시작합니다. 그래서 사이클이 주기보다 오래 걸려도 사이클이 겹치지 않습니다. 새 이슈를 찾으면 `이슈를 큐에 추가`, 처리가 끝나면 `이슈 처리 완료` 로그가 남습니다.
+
+주기를 짧게 잡을수록 GitHub API 호출이 늘어납니다. 첫 조회 이후에는 `since` 워터마크로 갱신된 이슈만 읽지만, 주기를 1초 단위로 낮추기 전에 토큰의 rate limit을 확인하세요.
+
+이슈를 가져오는 소스는 `ISSUE_SOURCE`로 고릅니다. 현재 지원하는 값은 `github` 하나입니다. 다른 이슈 트래커를 붙이려면 `app/src/issues/issue-source.ts`의 `IssueSource`를 구현하고 `app/src/issues/issue-source-factory.ts`에 등록하면 되고, 중복 처리 필터와 폴링 루프는 소스와 무관하게 그대로 동작합니다.
 
 ### 5. 종료
 
@@ -332,7 +337,8 @@ Paseo 데몬 연결 완료
 
 | 이름 | 설명 | 기본값 |
 | --- | --- | --- |
-| `POLL_CRON` | 폴링 주기 (cron 식) | `*/5 * * * *` |
+| `ISSUE_SOURCE` | 이슈를 가져올 소스. 현재 지원: `github` | `github` |
+| `POLL_INTERVAL_MS` | 폴링 주기(ms). 사이클이 끝난 뒤 이만큼 쉬고 다음 사이클을 시작한다 | `10000` (10초) |
 | `MAX_CONCURRENT_ISSUES` | 동시에 처리할 이슈 수. worktree는 이슈마다 따로 생긴다 | `1` |
 | `MAX_ATTEMPTS` | 실패한 이슈 재시도 횟수. 넘으면 `failed`로 남는다 | `3` |
 

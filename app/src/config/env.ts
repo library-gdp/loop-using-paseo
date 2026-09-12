@@ -63,8 +63,13 @@ export const envSchema = z.object({
   GITHUB_ISSUE_LABELS: csv,
   GITHUB_API_BASE_URL: z.string().url().default("https://api.github.com"),
 
+  // ── Issue Source ─────────────────────────────────────────────────────────
+  /** 이슈를 가져올 소스. 새 소스를 추가하면 여기와 소스 팩토리에 값을 늘린다. */
+  ISSUE_SOURCE: lowercased(z.enum(["github"])).default("github"),
+
   // ── Loop ─────────────────────────────────────────────────────────────────
-  POLL_CRON: z.string().min(1).default("*/5 * * * *"),
+  /** 폴링 주기(ms). 한 사이클이 끝난 뒤 이 시간만큼 쉬고 다음 사이클을 시작한다. */
+  POLL_INTERVAL_MS: z.coerce.number().int().positive().default(10_000),
   MAX_CONCURRENT_ISSUES: z.coerce.number().int().positive().default(1),
   /** 실패한 이슈를 다시 시도할 최대 횟수. */
   MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
