@@ -3,6 +3,7 @@ import { createDataSource, initializeDataSource } from "./db/data-source.js";
 import { IssueCollector } from "./issues/issue-collector.js";
 import { createIssueSource } from "./issues/issue-source-factory.js";
 import { logger } from "./logger.js";
+import { createAgentRunner } from "./paseo/agent-runner-factory.js";
 import { connectPaseo } from "./paseo/client.js";
 import { seedBuiltinPrompt } from "./prompts/prompt-service.js";
 import { startPollingLoop } from "./scheduler/poll-loop.js";
@@ -28,8 +29,12 @@ async function main(): Promise<void> {
 
   const paseo = await connectPaseo(env);
 
+  // 종료 신호를 받으면 진행 중인 에이전트 대기를 끊는다.
+  const shutdownController = new AbortController();
+
   const collector = new IssueCollector(createIssueSource(env), dataSource);
-  const worker = new IssueWorker(env, dataSource, paseo);
+  const runner = createAgentRunner(env, paseo);
+  const worker = new IssueWorker(env, dataSource, runner, shutdownController.signal);
   await worker.recoverStaleRunning();
 
   const loop = startPollingLoop({ intervalMs: env.POLL_INTERVAL_MS, collector, worker });
@@ -40,6 +45,8 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info({ signal }, "종료 신호 수신, 정리 중");
 
+    // 먼저 대기를 취소해야 loop.stop()이 에이전트 완료까지 붙들리지 않는다.
+    shutdownController.abort();
     await loop.stop();
     await paseo.close().catch((error) => logger.error({ err: error }, "Paseo 연결 종료 실패"));
     await dataSource.destroy().catch((error) => logger.error({ err: error }, "DB 종료 실패"));
