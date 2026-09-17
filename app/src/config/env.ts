@@ -52,7 +52,7 @@ export const envSchema = z.object({
   /** Paseo 데몬이 볼 수 있는 대상 저장소의 로컬 경로. worktree 생성 기준점. */
   PROJECT_PATH: z.string().min(1),
   BASE_BRANCH: z.string().min(1).default("dev"),
-  /** 이슈별 브랜치 이름 접두사. `${prefix}${issueNumber}` 형태로 만들어진다. */
+  /** 이슈별 브랜치 이름 접두사. `${prefix}${issueId}` 형태로 만들어진다. */
   BRANCH_PREFIX: z.string().default("issue/"),
 
   // ── GitHub ───────────────────────────────────────────────────────────────

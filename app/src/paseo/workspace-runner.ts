@@ -3,7 +3,7 @@ import { type Env, resolveProvider } from "../config/env.js";
 import { logger } from "../logger.js";
 
 export interface RunIssueTaskInput {
-  issueNumber: number;
+  issueId: string;
   title: string;
   prompt: string;
 }
@@ -26,10 +26,10 @@ export async function runIssueTask(
   env: Env,
   input: RunIssueTaskInput,
 ): Promise<RunIssueTaskOutput> {
-  const branch = `${env.BRANCH_PREFIX}${input.issueNumber}`;
+  const branch = `${env.BRANCH_PREFIX}${input.issueId}`;
 
   const workspace = await client.workspaces.create({
-    title: `#${input.issueNumber} ${input.title}`.slice(0, 200),
+    title: `#${input.issueId} ${input.title}`.slice(0, 200),
     source: {
       kind: "worktree",
       cwd: env.PROJECT_PATH,
@@ -46,7 +46,7 @@ export async function runIssueTask(
 
   const agent = await workspace.agents.create({
     config: { provider: resolveProvider(env) },
-    title: `issue-${input.issueNumber}`,
+    title: `issue-${input.issueId}`,
     prompt: input.prompt,
   });
 

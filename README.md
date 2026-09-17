@@ -387,7 +387,7 @@ docker compose exec postgres psql -U loop -d loop
 ```sql
 INSERT INTO prompt_version (version, content, description)
 SELECT COALESCE(MAX(version), 0) + 1,
-       $$이슈 #{{issueNumber}} "{{title}}" 를 해결하세요.
+       $$이슈 #{{issueId}} "{{title}}" 를 해결하세요.
 
 {{body}}$$,
        '간결한 지시문으로 변경'
@@ -399,7 +399,7 @@ FROM prompt_version;
 | 자리표시자 | 값 |
 | --- | --- |
 | `{{repository}}` | `owner/repo` |
-| `{{issueNumber}}` | 이슈 번호 |
+| `{{issueId}}` | 이슈 식별자 (GitHub은 이슈 번호). 예전 이름인 `{{issueNumber}}`도 같은 값으로 치환된다 |
 | `{{title}}` | 이슈 제목 |
 | `{{url}}` | 이슈 링크 |
 | `{{labels}}` | 쉼표로 이은 라벨 목록 (없으면 `(없음)`) |
@@ -410,22 +410,21 @@ FROM prompt_version;
 
 | 테이블 | 내용 |
 | --- | --- |
-| `pending_issue` | 처리 대기 큐. `status`는 `pending` → `running` → (실패가 `MAX_ATTEMPTS`번 쌓이면) `failed` |
-| `processed_issue` | 처리가 끝난 이슈. `result`(`success`/`failure`), 브랜치, 사용한 프롬프트 버전, 에이전트 요약이 남는다 |
+| `issue` | 수집된 이슈의 큐이자 처리 이력. `status`는 `pending` → `running` → `done`이고, 실패가 `MAX_ATTEMPTS`번 쌓이면 `failed`가 된다. `done` 행에는 `result`(`success`/`failure`), 브랜치, 사용한 프롬프트 버전, 에이전트 요약이 남는다 |
 
 TypeORM 기본 명명 규칙을 따르므로 camelCase 컬럼은 큰따옴표로 감싸야 합니다.
 
 ```sql
 -- 최근 처리 결과
-SELECT "issueNumber", result, branch, "promptVersion", "finishedAt"
-FROM processed_issue ORDER BY "finishedAt" DESC LIMIT 20;
+SELECT "issueId", result, branch, "promptVersion", "finishedAt"
+FROM issue WHERE status = 'done' ORDER BY "finishedAt" DESC LIMIT 20;
 
 -- 재시도 횟수를 넘겨 멈춘 이슈
-SELECT "issueNumber", attempts, "lastError" FROM pending_issue WHERE status = 'failed';
+SELECT "issueId", attempts, "lastError" FROM issue WHERE status = 'failed';
 
 -- 멈춘 이슈를 다시 큐에 넣기 (다음 사이클에 처리된다)
-UPDATE pending_issue SET status = 'pending', attempts = 0, "lastError" = NULL
-WHERE "issueNumber" = 123;
+UPDATE issue SET status = 'pending', attempts = 0, "lastError" = NULL
+WHERE "issueId" = '123';
 ```
 
 ## 개발
@@ -455,4 +454,4 @@ WHERE "issueNumber" = 123;
 | `.env에 DB_PASSWORD를 설정하세요` | Docker Compose는 `DB_PASSWORD` 없이 postgres를 띄우지 않습니다. `.env`에 값을 넣습니다 |
 | DB 접속 실패 (`password authentication failed`) | postgres 볼륨은 **첫 기동 때의** 계정 정보로 초기화됩니다. 나중에 `DB_*`를 바꿨다면 DB 쪽 계정도 바꾸거나, 데이터를 버려도 되면 `docker compose down -v`로 초기화합니다 |
 | workspace 생성 실패 | `PROJECT_PATH`가 Paseo 데몬 기준 경로인지 확인합니다. Docker에서는 컨테이너 안 경로(`/workspace/target-repo`), Host에서는 호스트 절대 경로입니다. 대상 저장소에 `BASE_BRANCH`가 있는지도 확인합니다 |
-| 이슈를 가져오지 않음 | `GITHUB_ISSUE_LABELS`에 맞는 라벨이 붙은 open 이슈인지 확인합니다. PR은 처리하지 않습니다. `processed_issue`에 이미 있는 이슈도 건너뜁니다 |
+| 이슈를 가져오지 않음 | `GITHUB_ISSUE_LABELS`에 맞는 라벨이 붙은 open 이슈인지 확인합니다. PR은 처리하지 않습니다. `issue` 테이블에 이미 있는 이슈도 건너뜁니다 |

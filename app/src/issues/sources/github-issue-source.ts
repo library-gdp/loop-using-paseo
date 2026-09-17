@@ -49,7 +49,7 @@ export class GitHubIssueSource implements IssueSource {
 
       collected.push({
         repository: this.env.GITHUB_REPOSITORY,
-        issueNumber: issue.number,
+        issueId: String(issue.number),
         title: issue.title,
         body: issue.body ?? null,
         url: issue.html_url,

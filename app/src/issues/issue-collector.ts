@@ -1,9 +1,5 @@
 import type { DataSource } from "typeorm";
-import {
-  type PendingIssue,
-  PendingIssueEntity,
-  ProcessedIssueEntity,
-} from "../db/entities/index.js";
+import { type Issue, IssueEntity } from "../db/entities/index.js";
 import { logger } from "../logger.js";
 import type { IssueSource } from "./issue-source.js";
 
@@ -27,17 +23,16 @@ export class IssueCollector {
   async collect(): Promise<PollResult> {
     const issues = await this.source.fetchIssues();
 
-    const pendingRepo = this.dataSource.getRepository(PendingIssueEntity);
-    const processedRepo = this.dataSource.getRepository(ProcessedIssueEntity);
+    const issueRepo = this.dataSource.getRepository(IssueEntity);
 
     let enqueued = 0;
 
     for (const issue of issues) {
-      const key = { repository: issue.repository, issueNumber: issue.issueNumber };
-      if (await processedRepo.existsBy(key)) continue;
-      if (await pendingRepo.existsBy(key)) continue;
+      const key = { repository: issue.repository, issueId: issue.issueId };
+      // 대기 중이든 처리가 끝났든, 같은 이슈 행이 이미 있으면 다시 넣지 않는다.
+      if (await issueRepo.existsBy(key)) continue;
 
-      const row: Omit<PendingIssue, "id" | "createdAt" | "updatedAt"> = {
+      const row: Omit<Issue, "id" | "createdAt" | "updatedAt"> = {
         ...key,
         title: issue.title,
         body: issue.body,
@@ -47,10 +42,19 @@ export class IssueCollector {
         attempts: 0,
         lastError: null,
         issueUpdatedAt: issue.issueUpdatedAt,
+        result: null,
+        workspaceId: null,
+        agentId: null,
+        branch: null,
+        promptVersion: null,
+        summary: null,
+        error: null,
+        startedAt: null,
+        finishedAt: null,
       };
 
       // 유니크 제약이 최종 방어선이다. 경쟁 상태에서는 조용히 무시한다.
-      const inserted = await pendingRepo
+      const inserted = await issueRepo
         .createQueryBuilder()
         .insert()
         .values(row)
@@ -60,7 +64,7 @@ export class IssueCollector {
       if ((inserted.identifiers[0] ?? null) !== null) {
         enqueued += 1;
         logger.info(
-          { source: this.source.name, issue: issue.issueNumber, title: issue.title },
+          { source: this.source.name, issue: issue.issueId, title: issue.title },
           "이슈를 큐에 추가",
         );
       }
