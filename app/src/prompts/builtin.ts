@@ -9,7 +9,7 @@ export const BUILTIN_PROMPT_TEMPLATE = `당신은 이 저장소에서 작업하�
 아래 GitHub Issue를 읽고, 현재 worktree에서 해결하세요.
 
 - 저장소: {{repository}}
-- 이슈 번호: #{{issueNumber}}
+- 이슈: #{{issueId}}
 - 제목: {{title}}
 - 링크: {{url}}
 - 라벨: {{labels}}
@@ -28,7 +28,7 @@ export const BUILTIN_PROMPT_TEMPLATE = `당신은 이 저장소에서 작업하�
 
 export interface PromptVariables {
   repository: string;
-  issueNumber: number;
+  issueId: string;
   title: string;
   url: string;
   labels: string[];
@@ -40,7 +40,9 @@ export interface PromptVariables {
 export function renderPrompt(template: string, variables: PromptVariables): string {
   const table: Record<string, string> = {
     repository: variables.repository,
-    issueNumber: String(variables.issueNumber),
+    issueId: variables.issueId,
+    // 기존 프롬프트 버전이 쓰던 이름. 같은 값으로 계속 치환된다.
+    issueNumber: variables.issueId,
     title: variables.title,
     url: variables.url,
     labels: variables.labels.join(", ") || "(없음)",

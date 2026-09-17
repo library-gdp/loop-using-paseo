@@ -76,6 +76,7 @@ PostgreSQL에 다음 데이터를 저장합니다.
 .
 ├── app/                    # TypeScript 데몬 (package.json은 여기에 있다)
 │   ├── src/main.ts         # 진입점
+│   ├── src/issues/         # 이슈 소스 인터페이스·구현체·수집기
 │   └── test/
 ├── docker/paseo.Dockerfile # Paseo 데몬 이미지
 ├── Dockerfile              # 앱 이미지 (build context는 저장소 루트)
@@ -234,7 +235,7 @@ node --env-file=../.env dist/main.js
 > [!NOTE]
 > 앱은 `.env`를 스스로 읽지 않습니다. Node의 `--env-file` 플래그로 넘겨야 합니다.
 > 그래서 `npm start`, `npm run dev`는 `.env` 값 없이 실행되고, `npm run dev -- --env-file=...`처럼 인자를 붙여도 동작하지 않습니다.
-> 셸에서 `.env`를 `source`하는 방법도 쓰지 마세요. `POLL_CRON=*/5 * * * *`처럼 공백이 들어간 값이 깨집니다.
+> 셸에서 `.env`를 `source`하는 방법도 쓰지 마세요. 따옴표나 공백이 들어간 값이 깨집니다.
 
 개발 중에는 파일 변경 시 자동으로 재시작하는 watch 모드를 씁니다.
 
@@ -279,10 +280,14 @@ journalctl -u loop-using-paseo -f
 loop-using-paseo 기동
 Paseo 데몬에 연결 중
 Paseo 데몬 연결 완료
-루프 스케줄러 시작
+폴링 루프 시작
 ```
 
-기동 직후 한 번 폴링하고, 이후에는 `POLL_CRON` 주기로 폴링합니다. 새 이슈를 찾으면 `이슈를 큐에 추가`, 처리가 끝나면 `이슈 처리 완료` 로그가 남습니다. 앞 사이클이 끝나지 않았으면 다음 사이클은 건너뜁니다.
+기동 직후 한 번 폴링하고, 이후에는 한 사이클이 끝날 때마다 `POLL_INTERVAL_MS`(기본 10초)만큼 쉬었다가 다음 사이클을 시작합니다. 그래서 사이클이 주기보다 오래 걸려도 사이클이 겹치지 않습니다. 새 이슈를 찾으면 `이슈를 큐에 추가`, 처리가 끝나면 `이슈 처리 완료` 로그가 남습니다.
+
+주기를 짧게 잡을수록 GitHub API 호출이 늘어납니다. 첫 조회 이후에는 `since` 워터마크로 갱신된 이슈만 읽지만, 주기를 1초 단위로 낮추기 전에 토큰의 rate limit을 확인하세요.
+
+이슈를 가져오는 소스는 `ISSUE_SOURCE`로 고릅니다. 현재 지원하는 값은 `github` 하나입니다. 다른 이슈 트래커를 붙이려면 `app/src/issues/issue-source.ts`의 `IssueSource`를 구현하고 `app/src/issues/issue-source-factory.ts`에 등록하면 되고, 중복 처리 필터와 폴링 루프는 소스와 무관하게 그대로 동작합니다.
 
 ### 5. 종료
 
@@ -332,7 +337,8 @@ Paseo 데몬 연결 완료
 
 | 이름 | 설명 | 기본값 |
 | --- | --- | --- |
-| `POLL_CRON` | 폴링 주기 (cron 식) | `*/5 * * * *` |
+| `ISSUE_SOURCE` | 이슈를 가져올 소스. 현재 지원: `github` | `github` |
+| `POLL_INTERVAL_MS` | 폴링 주기(ms). 사이클이 끝난 뒤 이만큼 쉬고 다음 사이클을 시작한다 | `10000` (10초) |
 | `MAX_CONCURRENT_ISSUES` | 동시에 처리할 이슈 수. worktree는 이슈마다 따로 생긴다 | `1` |
 | `MAX_ATTEMPTS` | 실패한 이슈 재시도 횟수. 넘으면 `failed`로 남는다 | `3` |
 
@@ -381,7 +387,7 @@ docker compose exec postgres psql -U loop -d loop
 ```sql
 INSERT INTO prompt_version (version, content, description)
 SELECT COALESCE(MAX(version), 0) + 1,
-       $$이슈 #{{issueNumber}} "{{title}}" 를 해결하세요.
+       $$이슈 #{{issueId}} "{{title}}" 를 해결하세요.
 
 {{body}}$$,
        '간결한 지시문으로 변경'
@@ -393,7 +399,7 @@ FROM prompt_version;
 | 자리표시자 | 값 |
 | --- | --- |
 | `{{repository}}` | `owner/repo` |
-| `{{issueNumber}}` | 이슈 번호 |
+| `{{issueId}}` | 이슈 식별자 (GitHub은 이슈 번호). 예전 이름인 `{{issueNumber}}`도 같은 값으로 치환된다 |
 | `{{title}}` | 이슈 제목 |
 | `{{url}}` | 이슈 링크 |
 | `{{labels}}` | 쉼표로 이은 라벨 목록 (없으면 `(없음)`) |
@@ -404,22 +410,21 @@ FROM prompt_version;
 
 | 테이블 | 내용 |
 | --- | --- |
-| `pending_issue` | 처리 대기 큐. `status`는 `pending` → `running` → (실패가 `MAX_ATTEMPTS`번 쌓이면) `failed` |
-| `processed_issue` | 처리가 끝난 이슈. `result`(`success`/`failure`), 브랜치, 사용한 프롬프트 버전, 에이전트 요약이 남는다 |
+| `issue` | 수집된 이슈의 큐이자 처리 이력. `status`는 `pending` → `running` → `done`이고, 실패가 `MAX_ATTEMPTS`번 쌓이면 `failed`가 된다. `done` 행에는 `result`(`success`/`failure`), 브랜치, 사용한 프롬프트 버전, 에이전트 요약이 남는다 |
 
 TypeORM 기본 명명 규칙을 따르므로 camelCase 컬럼은 큰따옴표로 감싸야 합니다.
 
 ```sql
 -- 최근 처리 결과
-SELECT "issueNumber", result, branch, "promptVersion", "finishedAt"
-FROM processed_issue ORDER BY "finishedAt" DESC LIMIT 20;
+SELECT "issueId", result, branch, "promptVersion", "finishedAt"
+FROM issue WHERE status = 'done' ORDER BY "finishedAt" DESC LIMIT 20;
 
 -- 재시도 횟수를 넘겨 멈춘 이슈
-SELECT "issueNumber", attempts, "lastError" FROM pending_issue WHERE status = 'failed';
+SELECT "issueId", attempts, "lastError" FROM issue WHERE status = 'failed';
 
 -- 멈춘 이슈를 다시 큐에 넣기 (다음 사이클에 처리된다)
-UPDATE pending_issue SET status = 'pending', attempts = 0, "lastError" = NULL
-WHERE "issueNumber" = 123;
+UPDATE issue SET status = 'pending', attempts = 0, "lastError" = NULL
+WHERE "issueId" = '123';
 ```
 
 ## 개발
@@ -449,4 +454,4 @@ WHERE "issueNumber" = 123;
 | `.env에 DB_PASSWORD를 설정하세요` | Docker Compose는 `DB_PASSWORD` 없이 postgres를 띄우지 않습니다. `.env`에 값을 넣습니다 |
 | DB 접속 실패 (`password authentication failed`) | postgres 볼륨은 **첫 기동 때의** 계정 정보로 초기화됩니다. 나중에 `DB_*`를 바꿨다면 DB 쪽 계정도 바꾸거나, 데이터를 버려도 되면 `docker compose down -v`로 초기화합니다 |
 | workspace 생성 실패 | `PROJECT_PATH`가 Paseo 데몬 기준 경로인지 확인합니다. Docker에서는 컨테이너 안 경로(`/workspace/target-repo`), Host에서는 호스트 절대 경로입니다. 대상 저장소에 `BASE_BRANCH`가 있는지도 확인합니다 |
-| 이슈를 가져오지 않음 | `GITHUB_ISSUE_LABELS`에 맞는 라벨이 붙은 open 이슈인지 확인합니다. PR은 처리하지 않습니다. `processed_issue`에 이미 있는 이슈도 건너뜁니다 |
+| 이슈를 가져오지 않음 | `GITHUB_ISSUE_LABELS`에 맞는 라벨이 붙은 open 이슈인지 확인합니다. PR은 처리하지 않습니다. `issue` 테이블에 이미 있는 이슈도 건너뜁니다 |

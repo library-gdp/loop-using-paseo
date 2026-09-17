@@ -52,7 +52,7 @@ export const envSchema = z.object({
   /** Paseo 데몬이 볼 수 있는 대상 저장소의 로컬 경로. worktree 생성 기준점. */
   PROJECT_PATH: z.string().min(1),
   BASE_BRANCH: z.string().min(1).default("dev"),
-  /** 이슈별 브랜치 이름 접두사. `${prefix}${issueNumber}` 형태로 만들어진다. */
+  /** 이슈별 브랜치 이름 접두사. `${prefix}${issueId}` 형태로 만들어진다. */
   BRANCH_PREFIX: z.string().default("issue/"),
 
   // ── GitHub ───────────────────────────────────────────────────────────────
@@ -63,8 +63,13 @@ export const envSchema = z.object({
   GITHUB_ISSUE_LABELS: csv,
   GITHUB_API_BASE_URL: z.string().url().default("https://api.github.com"),
 
+  // ── Issue Source ─────────────────────────────────────────────────────────
+  /** 이슈를 가져올 소스. 새 소스를 추가하면 여기와 소스 팩토리에 값을 늘린다. */
+  ISSUE_SOURCE: lowercased(z.enum(["github"])).default("github"),
+
   // ── Loop ─────────────────────────────────────────────────────────────────
-  POLL_CRON: z.string().min(1).default("*/5 * * * *"),
+  /** 폴링 주기(ms). 한 사이클이 끝난 뒤 이 시간만큼 쉬고 다음 사이클을 시작한다. */
+  POLL_INTERVAL_MS: z.coerce.number().int().positive().default(10_000),
   MAX_CONCURRENT_ISSUES: z.coerce.number().int().positive().default(1),
   /** 실패한 이슈를 다시 시도할 최대 횟수. */
   MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),

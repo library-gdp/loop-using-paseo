@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@getpaseo/client": "0.8.0",
-    "croner": "^10.0.1",
     "octokit": "^5.0.5",
     "p-limit": "^7.3.2",
     "pg": "^8.23.0",
