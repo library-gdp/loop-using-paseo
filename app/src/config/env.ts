@@ -8,6 +8,16 @@ export const WORKER_AGENT_TO_PASEO_PROVIDER = {
 
 export type WorkerAgent = keyof typeof WORKER_AGENT_TO_PASEO_PROVIDER;
 
+/**
+ * `AGENT_PERMISSION_MODE`를 비웠을 때 쓰는 provider별 권한 모드.
+ * 데몬은 무인으로 돌기 때문에 도구 사용을 묻지 않는 모드가 기본이다.
+ * (id는 Paseo `providers.listModes()`가 돌려주는 값)
+ */
+export const WORKER_AGENT_DEFAULT_PERMISSION_MODE = {
+  claude_code: "bypassPermissions",
+  codex: "full-access",
+} as const satisfies Record<WorkerAgent, string>;
+
 const booleanish = z
   .union([z.boolean(), z.string()])
   .transform((value) =>
@@ -47,6 +57,16 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(30 * 60 * 1000),
+  /**
+   * 에이전트 권한 모드 id (Paseo `providers.listModes()` 값).
+   * 비우면 `WORKER_AGENT_DEFAULT_PERMISSION_MODE`를 쓴다. 빈 문자열도 "미지정"으로 본다.
+   */
+  AGENT_PERMISSION_MODE: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().trim().min(1).optional(),
+  ),
+  /** 실행이 끝난 에이전트 세션을 Paseo에서 아카이브할지. workspace(worktree)는 남긴다. */
+  AGENT_ARCHIVE_AFTER_RUN: booleanish.default(true),
 
   // ── Git / Workspace ──────────────────────────────────────────────────────
   /** Paseo 데몬이 볼 수 있는 대상 저장소의 로컬 경로. worktree 생성 기준점. */
@@ -122,6 +142,11 @@ export function splitRepository(repository: string): { owner: string; repo: stri
 export function resolveProvider(env: Env): string {
   const provider = WORKER_AGENT_TO_PASEO_PROVIDER[env.WORKER_AGENT];
   return env.WORKER_MODEL ? `${provider}/${env.WORKER_MODEL}` : provider;
+}
+
+/** 에이전트에 전달할 권한 모드 id. 지정이 없으면 provider별 무인 실행 기본값. */
+export function resolvePermissionMode(env: Env): string {
+  return env.AGENT_PERMISSION_MODE ?? WORKER_AGENT_DEFAULT_PERMISSION_MODE[env.WORKER_AGENT];
 }
 
 /** `ws://host:port/ws` 또는 TLS일 때 `wss://...`. */
