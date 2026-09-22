@@ -2,11 +2,12 @@ import { getEnv } from "./config/env.js";
 import { createDataSource, initializeDataSource } from "./db/data-source.js";
 import { IssueCollector } from "./issues/issue-collector.js";
 import { createIssueSource } from "./issues/issue-source-factory.js";
+import { createShutdown } from "./lifecycle/shutdown.js";
 import { logger } from "./logger.js";
 import { createAgentRunner } from "./paseo/agent-runner-factory.js";
 import { connectPaseo } from "./paseo/client.js";
-import { seedBuiltinPrompt } from "./prompts/prompt-service.js";
-import { startPollingLoop } from "./scheduler/poll-loop.js";
+import { getLatestPrompt } from "./prompts/prompt-service.js";
+import { type PollingLoop, startPollingLoop } from "./scheduler/poll-loop.js";
 import { IssueWorker } from "./worker/issue-worker.js";
 
 async function main(): Promise<void> {
@@ -25,7 +26,9 @@ async function main(): Promise<void> {
   );
 
   const dataSource = await initializeDataSource(createDataSource(env));
-  await seedBuiltinPrompt(dataSource);
+  // 쓸 수 있는 프롬프트가 없으면 Paseo에 연결하기 전에 기동을 멈춘다 (main().catch가 exit 1).
+  const prompt = await getLatestPrompt(dataSource);
+  logger.info({ promptVersion: prompt.version }, "최신 프롬프트 확인");
 
   const paseo = await connectPaseo(env);
 
@@ -33,30 +36,25 @@ async function main(): Promise<void> {
   const shutdownController = new AbortController();
 
   const collector = new IssueCollector(createIssueSource(env), dataSource);
+  let loop: PollingLoop | undefined;
+  const shutdown = createShutdown({
+    abortController: shutdownController,
+    getLoop: () => loop,
+    paseo,
+    dataSource,
+  });
+
   const runner = createAgentRunner(env, paseo);
-  const worker = new IssueWorker(env, dataSource, runner, shutdownController.signal);
+  // onFatal은 루프 사이클 안에서 불리므로 종료를 기다리지 않는다 (종료가 그 사이클의 끝을 기다린다).
+  const worker = new IssueWorker(env, dataSource, runner, shutdownController.signal, (error) => {
+    void shutdown.onFatal(error);
+  });
   await worker.recoverStaleRunning();
 
-  const loop = startPollingLoop({ intervalMs: env.POLL_INTERVAL_MS, collector, worker });
+  loop = startPollingLoop({ intervalMs: env.POLL_INTERVAL_MS, collector, worker });
 
-  let shuttingDown = false;
-  const shutdown = async (signal: NodeJS.Signals) => {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    logger.info({ signal }, "종료 신호 수신, 정리 중");
-
-    // 먼저 대기를 취소해야 loop.stop()이 에이전트 완료까지 붙들리지 않는다.
-    shutdownController.abort();
-    await loop.stop();
-    await paseo.close().catch((error) => logger.error({ err: error }, "Paseo 연결 종료 실패"));
-    await dataSource.destroy().catch((error) => logger.error({ err: error }, "DB 종료 실패"));
-
-    logger.info("정상 종료");
-    process.exit(0);
-  };
-
-  process.on("SIGTERM", (signal) => void shutdown(signal));
-  process.on("SIGINT", (signal) => void shutdown(signal));
+  process.on("SIGTERM", (signal) => void shutdown.onSignal(signal));
+  process.on("SIGINT", (signal) => void shutdown.onSignal(signal));
 }
 
 main().catch((error) => {

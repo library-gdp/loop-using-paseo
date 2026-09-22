@@ -4,8 +4,8 @@ import type { Env } from "../config/env.js";
 import { type Issue, IssueEntity } from "../db/entities/index.js";
 import { logger } from "../logger.js";
 import type { AgentRunner, AgentRunOutcome } from "../paseo/agent-runner.js";
-import { renderPrompt } from "../prompts/builtin.js";
-import { getLatestPrompt } from "../prompts/prompt-service.js";
+import { getLatestPrompt, UnusablePromptError } from "../prompts/prompt-service.js";
+import { findUnknownPlaceholders, renderPrompt } from "../prompts/render.js";
 
 /**
  * 큐에 쌓인 이슈를 꺼내 에이전트 러너로 처리한다.
@@ -13,6 +13,8 @@ import { getLatestPrompt } from "../prompts/prompt-service.js";
  */
 export class IssueWorker {
   private readonly limit: LimitFunction;
+  /** 쓸 수 있는 프롬프트가 없어 종료를 요청했다. 이후 이슈는 집지 않는다. */
+  private halted = false;
 
   constructor(
     private readonly env: Env,
@@ -20,6 +22,8 @@ export class IssueWorker {
     private readonly runner: AgentRunner,
     /** 종료 신호. abort 되면 진행 중인 에이전트 대기를 끊고 이슈를 큐로 되돌린다. */
     private readonly signal?: AbortSignal,
+    /** 프롬프트를 쓸 수 없어 더 처리할 수 없을 때 호출된다. 데몬 종료는 호출한 쪽이 맡는다. */
+    private readonly onFatal?: (error: UnusablePromptError) => void,
   ) {
     this.limit = pLimit(env.MAX_CONCURRENT_ISSUES);
   }
@@ -39,7 +43,7 @@ export class IssueWorker {
 
   private async process(issue: Issue): Promise<void> {
     // 종료 중이면 새 이슈를 집지 않는다.
-    if (this.signal?.aborted) return;
+    if (this.signal?.aborted || this.halted) return;
 
     const issueRepo = this.dataSource.getRepository(IssueEntity);
     const startedAt = new Date();
@@ -55,8 +59,15 @@ export class IssueWorker {
 
     try {
       const prompt = await getLatestPrompt(this.dataSource);
+      const unknownPlaceholders = findUnknownPlaceholders(prompt.content);
+      if (unknownPlaceholders.length > 0) {
+        log.warn(
+          { promptVersion: prompt.version, unknownPlaceholders },
+          "프롬프트에 알 수 없는 자리표시자가 있어 치환하지 않고 그대로 전달",
+        );
+      }
+
       const rendered = renderPrompt(prompt.content, {
-        repository: issue.repository,
         issueId: issue.issueId,
         title: issue.title,
         url: issue.url,
@@ -98,6 +109,28 @@ export class IssueWorker {
 
       log.info({ status: outcome.status, branch: outcome.branch }, "이슈 처리 완료");
     } catch (error) {
+      if (error instanceof UnusablePromptError) {
+        // 이슈 탓이 아니므로 시도 횟수를 소비하지 않고 선점 전 상태로 되돌린 뒤 종료를 요청한다.
+        this.halted = true;
+        try {
+          await issueRepo.update(
+            { id: issue.id },
+            { status: "pending", attempts: issue.attempts, lastError: error.message },
+          );
+          log.error({ err: error }, "쓸 수 있는 프롬프트가 없어 이슈를 큐로 되돌리고 처리 중단");
+        } catch (revertError) {
+          // 되돌리지 못해도 running으로 남은 행은 다음 기동의 recoverStaleRunning이 복구한다.
+          log.error(
+            { err: error, revertError },
+            "쓸 수 있는 프롬프트가 없어 처리 중단, 이슈를 큐로 되돌리지 못함",
+          );
+        } finally {
+          // 되돌림 성패와 무관하게 종료를 요청해야 데몬이 멈춘 채 살아 있지 않는다.
+          this.onFatal?.(error);
+        }
+        return;
+      }
+
       const message = error instanceof Error ? error.message : String(error);
       const attempts = issue.attempts + 1;
       const exhausted = attempts >= this.env.MAX_ATTEMPTS;
