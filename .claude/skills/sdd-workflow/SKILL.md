@@ -11,13 +11,13 @@ description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스
 
 | #   | 단계                 | 호출할 스킬                  | 산출물 위치               | 산출물                                                                 |
 | --- | ------------------ | ----------------------- | -------------------- | ------------------------------------------------------------------- |
-| 1   | Explore / Analysis | `sdd-explore`           | `explore/`           | `EXPLORE.md`                                                        |
-| 2   | Plan               | `sdd-plan`              | `plan/`              | `PLAN.md`, `ACCEPTANCE_CRITERIA.md`, `ACCEPTANCE_TEST_PLAN.md`      |
-| 3   | Architecture       | `sdd-architecture`      | `architecture/`      | `SOFTWARE_ARCHITECTURE.md`, `DATA_ARCHITECTURE.md`, `FLOW_CHART.md` |
-| 4   | Implementation     | `sdd-implementation`    | `implementation/`    | 코드 자체 (디렉토리만 생성 X)                                                  |
-| 5   | Test               | `sdd-test`              | `test/`              | `TEST_REPORT.md`, `evidence/` (UI가 있을 때만)                           |
-| 6   | Review             | `sdd-review`            | `review/`            | `REVIEW.md`                                                         |
-| 7   | Verification Gate  | `sdd-verification-gate` | `verification_gate/` | `EVALUATION.md`                                                     |
+| 1   | Explore / Analysis | `sdd-explore`           | `00.explore/`           | `EXPLORE.md`                                                        |
+| 2   | Plan               | `sdd-plan`              | `01.plan/`              | `PLAN.md`, `ACCEPTANCE_CRITERIA.md`, `ACCEPTANCE_TEST_PLAN.md`      |
+| 3   | Architecture       | `sdd-architecture`      | `02.architecture/`      | `SOFTWARE_ARCHITECTURE.md`, `DATA_ARCHITECTURE.md`, `FLOW_CHART.md` |
+| 4   | Implementation     | `sdd-implementation`    | `03.implementation/`    | 코드 자체 (디렉토리만 생성 X)                                                  |
+| 5   | Test               | `sdd-test`              | `04.test/`              | `TEST_REPORT.md`, `evidence/` (UI가 있을 때만)                           |
+| 6   | Review             | `sdd-review`            | `05.review/`            | `REVIEW.md`                                                         |
+| 7   | Verification Gate  | `sdd-verification-gate` | `06.verification_gate/` | `EVALUATION.md`                                                     |
 | 8   | Report             | `sdd-report`            | 작업 디렉토리 루트           | `REPORT.md`, push, PR                                               |
 
 
@@ -32,7 +32,8 @@ description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스
   - `<작업이름>`은 작업 내용을 나타내는 영문 소문자·숫자·밑줄(`[a-z0-9_]`)로 짓는다.
   - 날짜·시간은 워크플로우 시작 시점의 로컬 시각이다. `date +%Y%m%d_%H%M`으로 얻어라.
   - 전체 이름은 80자 이하여야 한다. 날짜·시간 접미사가 14자이므로 `<작업이름>`은 66자 이하로 짓는다.
-- 단계 디렉토리 이름: `explore`, `plan`, `architecture`, `implementation`, `test`, `review`, `verification_gate`. Report 단계는 디렉토리를 만들지 않고 작업 디렉토리 루트에 `REPORT.md`를 둔다.
+- 단계 디렉토리 이름은 `<두 자리 번호>.<단계 이름>` 형식이다. 번호는 `00`부터 단계 순서대로 붙인다: `00.explore`, `01.plan`, `02.architecture`, `03.implementation`, `04.test`, `05.review`, `06.verification_gate`. 번호 없는 이름(예: `explore/`)으로 디렉토리를 만들지 마라. Report 단계는 디렉토리를 만들지 않고 작업 디렉토리 루트에 `REPORT.md`를 둔다.
+- 디렉토리 번호는 경로에만 쓴다. 타임라인의 `<stage>` 값에는 번호를 붙이지 않는다.
 - 이하 문서에서 `$TASK_DIR`은 `reports/<작업 디렉토리>`(워크스페이스 루트 기준 상대 경로)를 가리킨다.
 
 ### 타임라인 기록
@@ -112,6 +113,6 @@ iteration 번호 N을 1로 두고 다음을 반복하라.
 
 1. `reports/` 아래에서 대상 작업 디렉토리를 찾아라. 여러 개면 사용자에게 확인하라.
 2. `.timeline.tsv`와 존재하는 산출물을 보고 마지막으로 끝난 단계를 판단하라. `end` 기록이 없는 단계는 끝나지 않은 것으로 보고 그 단계부터 다시 수행하라.
-3. `verification_gate/EVALUATION.md`의 마지막 iteration 섹션으로 현재 iteration 번호와 피드백을 복원하라.
+3. `06.verification_gate/EVALUATION.md`의 마지막 iteration 섹션으로 현재 iteration 번호와 피드백을 복원하라.
 4. `EXPLORE.md`, `PLAN.md`, `ACCEPTANCE_CRITERIA.md`를 다시 읽어 맥락을 복원한 뒤 이어서 진행하라.
 

@@ -31,7 +31,7 @@ description: SDD 워크플로우의 마지막 단계(Report). 전체 워크플�
    집계 이후 수행하는 커밋·push·PR 생성의 시간과 토큰은 포함되지 않는다. 이 사실은 집계 출력의 안내 문구에 이미 들어 있다.
 6. **커밋**: `conventional-commit` 스킬을 호출해 커밋하라. 목적별로 나누어라.
    - 코드 변경: 작업 성격에 맞는 type(`feat`, `fix`, `refactor` 등)
-   - 워크플로우 산출물: `docs(reports): <작업 요약> SDD 산출물 추가` — `$TASK_DIR` 전체(`.timeline.tsv`, `implementation/.gitkeep` 포함)
+   - 워크플로우 산출물: `docs(reports): <작업 요약> SDD 산출물 추가` — `$TASK_DIR` 전체(`.timeline.tsv`, `03.implementation/.gitkeep` 포함)
 7. **push**: `git push -u origin <작업 브랜치>`로 push하라. 거부되면 강제 push하지 말고 원인을 사용자에게 알려라.
 8. **PR 생성**
    - base 브랜치는 `EXPLORE.md`에 기록한 분기 원점 브랜치다. 기존 브랜치에서 작업을 이어서 해 분기 원점이 없으면 원격 기본 브랜치를 base로 한다.
@@ -56,13 +56,13 @@ description: SDD 워크플로우의 마지막 단계(Report). 전체 워크플�
 ## 2. 단계별 요약
 | 단계 | 핵심 내용 | 산출물 |
 |---|---|---|
-| Explore | ... | [EXPLORE.md](explore/EXPLORE.md) |
-| Plan | 단위 작업 <n>개, 인수 조건 <n>개, 인수 테스트 <n>개 | [PLAN.md](plan/PLAN.md), [ACCEPTANCE_CRITERIA.md](plan/ACCEPTANCE_CRITERIA.md), [ACCEPTANCE_TEST_PLAN.md](plan/ACCEPTANCE_TEST_PLAN.md) |
-| Architecture | <주요 결정> | [SOFTWARE_ARCHITECTURE.md](architecture/SOFTWARE_ARCHITECTURE.md), [DATA_ARCHITECTURE.md](architecture/DATA_ARCHITECTURE.md), [FLOW_CHART.md](architecture/FLOW_CHART.md) |
+| Explore | ... | [EXPLORE.md](00.explore/EXPLORE.md) |
+| Plan | 단위 작업 <n>개, 인수 조건 <n>개, 인수 테스트 <n>개 | [PLAN.md](01.plan/PLAN.md), [ACCEPTANCE_CRITERIA.md](01.plan/ACCEPTANCE_CRITERIA.md), [ACCEPTANCE_TEST_PLAN.md](01.plan/ACCEPTANCE_TEST_PLAN.md) |
+| Architecture | <주요 결정> | [SOFTWARE_ARCHITECTURE.md](02.architecture/SOFTWARE_ARCHITECTURE.md), [DATA_ARCHITECTURE.md](02.architecture/DATA_ARCHITECTURE.md), [FLOW_CHART.md](02.architecture/FLOW_CHART.md) |
 | Implementation | 변경 파일 <n>개, 아키텍처 문서 수정 <있음/없음> | 코드 변경 (아래 4절) |
-| Test | 최종 통과 <n>/<n> | [TEST_REPORT.md](test/TEST_REPORT.md) |
-| Review | 차단 <n>, 권고 <n> | [REVIEW.md](review/REVIEW.md) |
-| Verification Gate | <결론> | [EVALUATION.md](verification_gate/EVALUATION.md) |
+| Test | 최종 통과 <n>/<n> | [TEST_REPORT.md](04.test/TEST_REPORT.md) |
+| Review | 차단 <n>, 권고 <n> | [REVIEW.md](05.review/REVIEW.md) |
+| Verification Gate | <결론> | [EVALUATION.md](06.verification_gate/EVALUATION.md) |
 
 ## 3. 인수 조건 최종 결과
 | 인수 조건 | 결과 | 비고 |

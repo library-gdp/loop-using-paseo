@@ -1,6 +1,6 @@
 ---
 name: sdd-verification-gate
-description: SDD 워크플로우의 7단계(Verification Gate). REVIEW.md를 바탕으로 인수 조건 기준 합격 여부를 판정해 통과, 재시도(Implementation부터 새 iteration), 최대 3회 iteration 초과 통과 중 하나를 결정하고 reports/<작업 디렉토리>/verification_gate/EVALUATION.md에 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 검증 게이트만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 7단계(Verification Gate). REVIEW.md를 바탕으로 인수 조건 기준 합격 여부를 판정해 통과, 재시도(Implementation부터 새 iteration), 최대 3회 iteration 초과 통과 중 하나를 결정하고 reports/<작업 디렉토리>/06.verification_gate/EVALUATION.md에 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 검증 게이트만 따로 요청할 때 사용한다.
 ---
 
 # 7. Verification Gate
@@ -12,9 +12,9 @@ Review 결과를 바탕으로 작업 결과를 인수 조건 기준으로 검증
 ## 입력
 
 - 현재 iteration 번호 N (1~3)
-- `$TASK_DIR/review/REVIEW.md`의 `## Iteration N` 섹션
-- `$TASK_DIR/test/TEST_REPORT.md`의 `## Iteration N` 섹션
-- `$TASK_DIR/plan/ACCEPTANCE_CRITERIA.md`
+- `$TASK_DIR/05.review/REVIEW.md`의 `## Iteration N` 섹션
+- `$TASK_DIR/04.test/TEST_REPORT.md`의 `## Iteration N` 섹션
+- `$TASK_DIR/01.plan/ACCEPTANCE_CRITERIA.md`
 
 ## 판정 기준
 
@@ -28,7 +28,7 @@ Review 결과를 바탕으로 작업 결과를 인수 조건 기준으로 검증
 
 ## 절차
 
-1. `$TASK_DIR/verification_gate/`를 만들고 타임라인을 기록하라.
+1. `$TASK_DIR/06.verification_gate/`를 만들고 타임라인을 기록하라.
    ```bash
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" verification_gate <N> start
    ```
@@ -38,7 +38,7 @@ Review 결과를 바탕으로 작업 결과를 인수 조건 기준으로 검증
    - **재시도**: 불합격이고 N < 3. iteration N+1을 Implementation부터 시작한다.
    - **최대 iteration 초과 통과**: 불합격이고 N = 3. 더 반복하지 않고 Report 단계로 넘어가며, 미충족 AC를 Report와 PR에 명시한다.
 4. **재시도**이면 다음 iteration의 Implementation이 바로 작업할 수 있도록 피드백을 작성하라. 피드백 항목마다 관련 AC·발견 사항 ID, 문제, 원인, 수정 방향, 관련 파일을 적고, 우선순위대로 나열하라. 인수 조건 밖의 작업을 요구하지 마라.
-5. `$TASK_DIR/verification_gate/EVALUATION.md`를 갱신하라.
+5. `$TASK_DIR/06.verification_gate/EVALUATION.md`를 갱신하라.
    - 파일이 없으면 템플릿의 머리말부터 만든다.
    - 상단 "Iteration 이력" 표에 이번 iteration 행을 추가하라.
    - `## Iteration N` 섹션을 추가하라. 이전 iteration 섹션은 수정하지 마라.

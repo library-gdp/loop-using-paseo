@@ -1,6 +1,6 @@
 ---
 name: sdd-plan
-description: SDD 워크플로우의 2단계(Plan). EXPLORE.md를 바탕으로 순서가 있는 단위 작업 계획(PLAN.md), 검증 가능한 인수 조건(ACCEPTANCE_CRITERIA.md), 인수 테스트 계획(ACCEPTANCE_TEST_PLAN.md)을 reports/<작업 디렉토리>/plan/에 작성한다. sdd-workflow가 호출하거나, 사용자가 SDD 계획 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 2단계(Plan). EXPLORE.md를 바탕으로 순서가 있는 단위 작업 계획(PLAN.md), 검증 가능한 인수 조건(ACCEPTANCE_CRITERIA.md), 인수 테스트 계획(ACCEPTANCE_TEST_PLAN.md)을 reports/<작업 디렉토리>/01.plan/에 작성한다. sdd-workflow가 호출하거나, 사용자가 SDD 계획 단계만 따로 요청할 때 사용한다.
 ---
 
 # 2. Plan
@@ -11,11 +11,11 @@ Explore 단계에서 파악한 요구사항과 프로젝트 상태를 바탕으�
 
 ## 입력
 
-- `$TASK_DIR/explore/EXPLORE.md`
+- `$TASK_DIR/00.explore/EXPLORE.md`
 
 ## 절차
 
-1. `$TASK_DIR/plan/`을 만들고 타임라인을 기록하라.
+1. `$TASK_DIR/01.plan/`을 만들고 타임라인을 기록하라.
    ```bash
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" plan - start
    ```
@@ -38,7 +38,7 @@ Explore 단계에서 파악한 요구사항과 프로젝트 상태를 바탕으�
    - 선행 관계가 있으면 순서에 반영하고, 위험 요소와 대응을 적어라.
 6. 인수 조건 문서의 해시를 기록하라. Review 단계가 이 해시로 문서가 바뀌지 않았는지 확인한다.
    ```bash
-   sha256sum "$TASK_DIR/plan/ACCEPTANCE_CRITERIA.md" > "$TASK_DIR/plan/.acceptance_criteria.sha256"
+   sha256sum "$TASK_DIR/01.plan/ACCEPTANCE_CRITERIA.md" > "$TASK_DIR/01.plan/.acceptance_criteria.sha256"
    ```
 7. 타임라인을 기록하라.
    ```bash

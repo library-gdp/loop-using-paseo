@@ -1,6 +1,6 @@
 ---
 name: sdd-architecture
-description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 따를 소프트웨어 아키텍처, 데이터 아키텍처, mermaid 플로우차트를 대안 비교와 선택 근거와 함께 reports/<작업 디렉토리>/architecture/에 작성한다. sdd-workflow가 호출하거나, 구현 중 아키텍처 산출물을 수정해야 할 때, 사용자가 SDD 아키텍처 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 따를 소프트웨어 아키텍처, 데이터 아키텍처, mermaid 플로우차트를 대안 비교와 선택 근거와 함께 reports/<작업 디렉토리>/02.architecture/에 작성한다. sdd-workflow가 호출하거나, 구현 중 아키텍처 산출물을 수정해야 할 때, 사용자가 SDD 아키텍처 단계만 따로 요청할 때 사용한다.
 ---
 
 # 3. Architecture
@@ -11,12 +11,12 @@ description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 �
 
 ## 입력
 
-- `$TASK_DIR/explore/EXPLORE.md`
-- `$TASK_DIR/plan/PLAN.md`, `ACCEPTANCE_CRITERIA.md`
+- `$TASK_DIR/00.explore/EXPLORE.md`
+- `$TASK_DIR/01.plan/PLAN.md`, `ACCEPTANCE_CRITERIA.md`
 
 ## 절차
 
-1. `$TASK_DIR/architecture/`를 만들고 타임라인을 기록하라.
+1. `$TASK_DIR/02.architecture/`를 만들고 타임라인을 기록하라.
    ```bash
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" architecture - start
    ```
