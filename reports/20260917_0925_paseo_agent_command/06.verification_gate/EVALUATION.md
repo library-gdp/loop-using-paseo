@@ -46,13 +46,13 @@ Review와 다르게 판단한 항목: 없음. F-03(단위 테스트 추가)은 P
    - 원인: `resolveProvider(env)`가 모델 없이 `claude`/`codex`만 돌려주고, SDK 0.8.0 `parseProviderModel`(`index.js:310-313`)이 `/` 없는 값을 거부한다.
    - 수정 방향: README 약속을 지키는 (a)안을 채택하라. `PaseoAgentRunner`가 provider 문자열에 `/`가 없으면 첫 실행 시 `client.providers.listModels(provider)`로 `isDefault === true`인 모델(없으면 첫 모델)을 골라 `provider/model`을 완성하고 메모이즈한다. 모델 목록이 비어 있으면 `AgentRunError("agent", "…기본 모델을 찾을 수 없음. WORKER_MODEL을 지정하세요")`를 던진다. 고른 모델을 "에이전트 생성" 로그의 `provider`에 드러내라. `resolveProvider`와 `.env.example`·README 문구는 유지된다(약속이 실제로 동작하게 될 뿐이다). 아키텍처 문서 2.6(설정 주입)에 이 결정을 반영하고 세 문서의 변경 이력에 기록하라.
    - 재검증: AT-01·AT-02를 **`WORKER_MODEL` 없이** 다시 수행해야 한다. 나머지 데몬 테스트는 `WORKER_MODEL` 없이 한 번 더 돌려 회귀를 확인하라(비용을 고려해 AT-05·AT-07·AT-08·AT-12 정도는 필수, 나머지는 가능하면).
-   - 관련 파일: `app/src/paseo/paseo-agent-runner.ts`, (필요 시) `app/src/paseo/agent-runner-factory.ts`, `reports/…/architecture/SOFTWARE_ARCHITECTURE.md`, `DATA_ARCHITECTURE.md`, `FLOW_CHART.md`
+   - 관련 파일: `app/src/paseo/paseo-agent-runner.ts`, (필요 시) `app/src/paseo/agent-runner-factory.ts`, `reports/…/02.architecture/SOFTWARE_ARCHITECTURE.md`, `DATA_ARCHITECTURE.md`, `FLOW_CHART.md`
 
 2. **[AC-09 / F-02] 아키텍처 문서와 구현 불일치, 변경 이력 없음**
    - 문제: `DATA_ARCHITECTURE.md` §6이 약속한 `previousWorkspaceId?` 보조 탐색 경로가 구현에 없다. `SOFTWARE_ARCHITECTURE.md` §4의 `resolveWorkspace(branch, title)` 서명도 실제와 다르다. 세 문서의 "변경 이력"이 비어 있다.
    - 원인: 구현 중 단순화(목록 탐색만으로 AC-09가 충족됨)를 문서에 반영하지 않았다.
    - 수정 방향: 보조 경로를 구현하지 말고(인수 조건 밖) 문서를 현재 구현으로 고쳐라. §6 "재사용 판정 키"를 "B(목록 탐색)만 채택, 보조 경로는 후속 과제"로 수정하고, §4 서명을 `(branch, input, log)`로 맞춘 뒤, 각 문서 변경 이력에 일시·iteration 2·내용·이유를 남겨라. 1번 피드백의 기본 모델 해석 결정도 같은 변경 이력에 넣어라.
-   - 관련 파일: `reports/…/architecture/DATA_ARCHITECTURE.md`, `SOFTWARE_ARCHITECTURE.md`, `FLOW_CHART.md`
+   - 관련 파일: `reports/…/02.architecture/DATA_ARCHITECTURE.md`, `SOFTWARE_ARCHITECTURE.md`, `FLOW_CHART.md`
 
 3. **[AC-16, AC-17 / F-03] 단위 테스트 추가**
    - 문제: `app/test/env.test.ts`에 vitest 케이스 3개가 추가되어 "단위·통합 테스트를 작성하지 않는다" 규칙을 어겼다.

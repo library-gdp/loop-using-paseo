@@ -34,8 +34,8 @@
 
 ```bash
 # 타임라인, 하네스 디렉터리
-node .claude/skills/sdd-workflow/scripts/timeline.mjs mark reports/paseo_agent_command_20260917_0925 test 1 start
-mkdir -p reports/paseo_agent_command_20260917_0925/test/harness
+node .claude/skills/sdd-workflow/scripts/timeline.mjs mark reports/20260917_0925_paseo_agent_command test 1 start
+mkdir -p reports/20260917_0925_paseo_agent_command/04.test/harness
 
 # 임시 대상 저장소 (dev 브랜치, 커밋 1개)
 REPO=$(mktemp -d /tmp/at-target-XXXX)   # → /tmp/at-target-DBdP
@@ -43,7 +43,7 @@ git -C $REPO init -q -b dev && printf '# AT target\n\nhello\n' > $REPO/README.md
 git -C $REPO add -A && git -C $REPO commit -qm init   # dev = 2b5b1674c3c459981eba086b2eeb66f99fe0fccb
 
 # 하네스 실행 형식 (app/ 에서)
-AT_REPO=/tmp/at-target-DBdP [WORKER_MODEL=claude-opus-5] node --import tsx ../reports/paseo_agent_command_20260917_0925/test/harness/<파일>.ts
+AT_REPO=/tmp/at-target-DBdP [WORKER_MODEL=claude-opus-5] node --import tsx ../reports/20260917_0925_paseo_agent_command/04.test/harness/<파일>.ts
 ```
 
 하네스: `test/harness/common.ts`(공용), `at01-worktree.ts`, `at05-timeout.ts`, `at06-mode.ts`, `at07-permission.ts`, `at08-rerun.ts`, `at09-noarchive.ts`, `at11-worker-stub.ts`, `at12-cancel.ts`, `at12-sigterm.ts`, `at15-errors.ts`. 모두 `app/src`의 프로덕션 모듈을 import 한다.
@@ -291,10 +291,10 @@ iteration 1의 환경 편차(`WORKER_MODEL` 지정)는 이번에 쓰지 않았�
 
 ### 환경 준비
 ```bash
-node .claude/skills/sdd-workflow/scripts/timeline.mjs mark reports/paseo_agent_command_20260917_0925 test 2 start
+node .claude/skills/sdd-workflow/scripts/timeline.mjs mark reports/20260917_0925_paseo_agent_command test 2 start
 REPO=$(mktemp -d /tmp/at-target-XXXX)   # → /tmp/at-target-pmv5, dev = 23705ba17890b95bd1fd3705528ce2eadbc34474
 # 하네스 실행 (app/ 에서, WORKER_MODEL 없음)
-AT_REPO=/tmp/at-target-pmv5 node --import tsx ../reports/paseo_agent_command_20260917_0925/test/harness/<파일>.ts
+AT_REPO=/tmp/at-target-pmv5 node --import tsx ../reports/20260917_0925_paseo_agent_command/04.test/harness/<파일>.ts
 ```
 
 ### AT-01 격리 worktree 생성
