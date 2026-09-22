@@ -12,15 +12,15 @@ description: SDD 워크플로우의 4단계(Implementation). PLAN.md의 단위 �
 ## 입력
 
 - 현재 iteration 번호 N (1~3)
-- `$TASK_DIR/plan/PLAN.md`, `ACCEPTANCE_CRITERIA.md`
-- `$TASK_DIR/architecture/` 의 세 문서
-- N ≥ 2이면 `$TASK_DIR/verification_gate/EVALUATION.md`의 `## Iteration N-1` 섹션 피드백
+- `$TASK_DIR/01.plan/PLAN.md`, `ACCEPTANCE_CRITERIA.md`
+- `$TASK_DIR/02.architecture/` 의 세 문서
+- N ≥ 2이면 `$TASK_DIR/06.verification_gate/EVALUATION.md`의 `## Iteration N-1` 섹션 피드백
 
 ## 절차
 
-1. `$TASK_DIR/implementation/`을 만들고(이미 있으면 그대로 둔다) 빈 디렉토리가 git에 남도록 `.gitkeep`을 두어라. 타임라인을 기록하라.
+1. `$TASK_DIR/03.implementation/`을 만들고(이미 있으면 그대로 둔다) 빈 디렉토리가 git에 남도록 `.gitkeep`을 두어라. 타임라인을 기록하라.
    ```bash
-   mkdir -p "$TASK_DIR/implementation" && touch "$TASK_DIR/implementation/.gitkeep"
+   mkdir -p "$TASK_DIR/03.implementation" && touch "$TASK_DIR/03.implementation/.gitkeep"
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" implementation <N> start
    ```
 2. 입력 문서를 읽어라. 인수 조건과 아키텍처 결정을 구현의 기준으로 삼아라.

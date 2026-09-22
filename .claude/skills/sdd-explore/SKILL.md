@@ -1,6 +1,6 @@
 ---
 name: sdd-explore
-description: SDD 워크플로우의 1단계(Explore / Analysis). 작업 요청과 요구사항을 정확히 이해하고, 작업에 필요한 파일만 골라 현재 프로젝트 상태를 파악해 reports/<작업 디렉토리>/explore/EXPLORE.md를 작성한다. sdd-workflow가 호출하거나, 사용자가 SDD 탐색·분석 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 1단계(Explore / Analysis). 작업 요청과 요구사항을 정확히 이해하고, 작업에 필요한 파일만 골라 현재 프로젝트 상태를 파악해 reports/<작업 디렉토리>/00.explore/EXPLORE.md를 작성한다. sdd-workflow가 호출하거나, 사용자가 SDD 탐색·분석 단계만 따로 요청할 때 사용한다.
 ---
 
 # 1. Explore / Analysis
@@ -16,7 +16,7 @@ description: SDD 워크플로우의 1단계(Explore / Analysis). 작업 요청�
 
 ## 절차
 
-1. `$TASK_DIR/explore/`를 만들고 타임라인을 기록하라.
+1. `$TASK_DIR/00.explore/`를 만들고 타임라인을 기록하라.
    ```bash
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" explore - start
    ```
@@ -29,7 +29,7 @@ description: SDD 워크플로우의 1단계(Explore / Analysis). 작업 요청�
 5. **현재 상태 정리**: 관련 모듈의 역할, 데이터 구조, 설정·환경변수, 빌드·실행 방법, 기존 테스트 수단, 이번 작업이 영향을 줄 지점을 정리하라.
 6. **기준 커밋 기록**: `git rev-parse HEAD`, 현재 작업 브랜치, 작업 브랜치를 분기한 원점 브랜치를 기록하라. Review 단계는 이 커밋을 기준으로 diff를 보고, Report 단계는 분기 원점 브랜치를 PR base로 쓴다. 기존 브랜치에서 작업을 이어서 해 분기 원점이 없으면 "없음"으로 적어라.
 7. **모호점 처리**: 요구사항이 여러 방식으로 해석되고 그 선택이 계획을 바꾸면 사용자에게 질문하라. 합리적인 기본값이 있으면 가정으로 기록하고 넘어가라.
-8. `$TASK_DIR/explore/EXPLORE.md`를 아래 템플릿으로 작성하라.
+8. `$TASK_DIR/00.explore/EXPLORE.md`를 아래 템플릿으로 작성하라.
 9. 타임라인을 기록하라.
    ```bash
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" explore - end
