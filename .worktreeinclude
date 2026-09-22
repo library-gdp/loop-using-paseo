@@ -1,0 +1,4 @@
+# git worktree 생성 시 복사할 gitignore 대상 파일 (.gitignore 문법)
+# IntelliJ IDEA
+.idea/
+*.iml

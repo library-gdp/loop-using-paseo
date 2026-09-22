@@ -9,3 +9,16 @@ coverage/
 
 *.log
 .DS_Store
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+*.code-workspace
+.history/
+*.swp
+*.swo
+*~
