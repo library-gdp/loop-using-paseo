@@ -9,9 +9,9 @@
   - PostgreSQL: `docker compose up -d postgres` 또는 `docker run --rm -d -p 55432:5432 -e POSTGRES_USER=loop -e POSTGRES_PASSWORD=loop -e POSTGRES_DB=loop postgres:18-alpine` (테스트 전용 인스턴스, 종료 시 제거)
   - GitHub API: 실제 `https://api.github.com`. 토큰은 `gh auth token`으로 얻는다.
   - **Paseo는 띄우지 않는다.** 이번 작업 범위는 루프의 Polling 단계이고, Paseo 데몬과 AI 에이전트 자격 증명은 이 단계 검증에 필요하지 않다(범위 제외 참조). 따라서 데몬 수준 테스트는 `main.ts`의 Polling 배선과 동일한 순서로 프로덕션 모듈을 연결한 **하네스 스크립트**로 수행한다.
-- **하네스 스크립트 위치**: `reports/issue_polling_20260912_1704/test/harness/*.ts`
+- **하네스 스크립트 위치**: `reports/20260912_1704_issue_polling/04.test/harness/*.ts`
   - 앱 소스(`app/src/...`)의 프로덕션 모듈을 그대로 import 한다. 검증 대상 로직을 하네스에 복제하지 않는다.
-  - 실행: `cd app && node --import tsx ../reports/issue_polling_20260912_1704/test/harness/<파일>.ts`
+  - 실행: `cd app && node --import tsx ../reports/20260912_1704_issue_polling/04.test/harness/<파일>.ts`
 - **환경변수(테스트 기본값)**
 
   ```

@@ -1,6 +1,6 @@
 # REPORT — 지속적 Issue 수집 (Issue 소스 추상화 + Polling 주기 환경변수화)
 
-- 작업 디렉토리: `reports/issue_polling_20260912_1704`
+- 작업 디렉토리: `reports/20260912_1704_issue_polling`
 - 작업 브랜치: `feature/issue-fetch` (base: `main`, 기준 커밋: `7877c6b0741a62f3a1f06be3e6e2072d0deee2ce`)
 - 최종 결론: **통과**
 - 수행한 iteration: 2회

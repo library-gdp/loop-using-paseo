@@ -62,7 +62,7 @@ Gate는 Review의 판정을 그대로 받아들이지 않고 두 차단 사항�
 3. **[F-04] 아키텍처 문서와 구현의 괴리를 변경 이력에 남기지 않았다** (위 두 항목 수정에 수반되는 문서 작업)
    - 문제: SOFTWARE_ARCHITECTURE 2.4는 "보조로 실행 중 가드 플래그"를 둔다고 적었고 FLOW_CHART 2절은 건너뜀 분기를 도달 가능한 것처럼 그렸으나, 실제로는 그 경로가 존재하지 않는다.
    - 수정 방향: 1·2번 수정 후 SOFTWARE_ARCHITECTURE 2.4(및 필요 시 2.1·2.6)와 FLOW_CHART 2·3절을 실제 구현에 맞게 고치고, 각 문서의 "변경 이력"에 일시·iteration 2·바뀐 내용·이유를 추가하라.
-   - 관련 파일: `reports/issue_polling_20260912_1704/architecture/SOFTWARE_ARCHITECTURE.md`, `.../FLOW_CHART.md`
+   - 관련 파일: `reports/20260912_1704_issue_polling/02.architecture/SOFTWARE_ARCHITECTURE.md`, `.../FLOW_CHART.md`
 
 **다음 iteration에서 다루지 않을 것** (권고·참고는 판정에 영향을 주지 않으며 Report의 후속 과제로 넘긴다): F-03(`stop()` 무기한 대기), F-05(확장 지점이 팩토리+enum 두 곳), F-06(`existsBy` N+1), F-07(`unref()` 미적용), F-08(증거 형태), F-09(`orIgnore` 경합 분기 미검증), F-10(AT-04/05 대상 저장소 변경 — 타당한 이탈로 확인됨).
 

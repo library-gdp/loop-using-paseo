@@ -111,7 +111,7 @@ app/src
 | `.env.example`, `docker-compose.yml`, `Dockerfile` | 환경변수 전달 경로 (compose는 `env_file`) |
 | `node_modules/@getpaseo/client/dist/index.d.ts`, `daemon-client.{d.ts,js}` | SDK 공개 API, `waitForFinish` 동작 |
 | `node_modules/@getpaseo/protocol/dist/messages.d.ts`, `agent-types.d.ts` | workspace 생성 옵션, 에이전트 스냅샷·권한·사용량 타입 |
-| `reports/issue_polling_20260912_1704/*` | 이전 작업의 산출물 형식, 리뷰 권고(F-03), 하네스 방식 |
+| `reports/20260912_1704_issue_polling/*` | 이전 작업의 산출물 형식, 리뷰 권고(F-03), 하네스 방식 |
 
 ## 6. 가정과 미확인 사항
 

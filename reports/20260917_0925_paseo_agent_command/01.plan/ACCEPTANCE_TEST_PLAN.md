@@ -10,9 +10,9 @@
   - **AI 에이전트**: `WORKER_AGENT=claude_code`. 실제 에이전트 실행이 필요한 테스트(AT-03, AT-04, AT-05, AT-06, AT-07)는 짧은 프롬프트로 제한한다.
   - **작업 대상 저장소**: 테스트용 임시 git 저장소를 `mktemp -d`로 만들고 `dev` 브랜치에 커밋 하나를 둔다. 이 경로를 `PROJECT_PATH`로 쓴다. 테스트가 끝나면 생성된 workspace를 아카이브하고 임시 디렉터리를 지운다.
   - **PostgreSQL은 쓰지 않는다.** `IssueWorker` 검증은 스텁 저장소로 한다.
-- **하네스 스크립트 위치**: `reports/paseo_agent_command_20260917_0925/test/harness/*.ts`
+- **하네스 스크립트 위치**: `reports/20260917_0925_paseo_agent_command/04.test/harness/*.ts`
   - 앱 소스(`app/src/...`)의 프로덕션 모듈을 그대로 import 한다. 검증 대상 로직을 하네스에 복제하지 않는다.
-  - 실행: `cd app && node --import tsx ../reports/paseo_agent_command_20260917_0925/test/harness/<파일>.ts`
+  - 실행: `cd app && node --import tsx ../reports/20260917_0925_paseo_agent_command/04.test/harness/<파일>.ts`
   - 하네스는 결과를 JSON 한 줄(`RESULT {...}`)로 stdout에 남겨 판정 근거로 삼는다.
 - **환경변수(테스트 기본값)**
 
