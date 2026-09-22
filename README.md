@@ -37,6 +37,13 @@
 2. **Workspace 생성** — Paseo SDK를 통해 workspace를 생성하고, Paseo가 worktree를 만듭니다.
 3. **작업 실행** — Paseo SDK로 미리 저장된 프롬프트와 GitHub Issue 정보를 전달하고, AI Agent가 해당 worktree에서 작업을 진행합니다.
 
+2·3단계는 `app/src/paseo/`의 에이전트 러너가 담당하며 다음 규칙으로 동작합니다.
+
+- **권한 모드**: 데몬은 무인으로 돌기 때문에 에이전트를 `AGENT_PERMISSION_MODE`(기본: claude_code `bypassPermissions`, codex `full-access`)로 만듭니다. 그래도 권한 요청이 생기면 사람 대신 **거부하고 중단**시킨 뒤 이슈를 `failure`(`error`에 `권한 요청으로 중단됨`)로 기록합니다. `default`·`acceptEdits` 같은 제한 모드는 의도적으로 제한한 것으로 보고 임의 승인하지 않습니다.
+- **workspace 재사용**: 같은 이슈를 다시 처리할 때(재시도, 취소 후 재기동) 같은 브랜치(`BRANCH_PREFIX + 이슈 ID`)의 workspace가 Paseo에 남아 있으면 새로 만들지 않고 그 worktree에서 이어서 작업합니다.
+- **세션 정리**: 실행이 끝나면 에이전트 세션은 아카이브하고(`AGENT_ARCHIVE_AFTER_RUN`), worktree는 결과 확인·PR 생성을 위해 남깁니다.
+- **종료 신호**: 에이전트 실행 중 SIGTERM/SIGINT를 받으면 완료를 기다리지 않고 이슈를 `pending`으로 되돌린 뒤 종료합니다. 에이전트는 Paseo 안에서 계속 돌 수 있으며, 다음 기동에서 같은 workspace를 재사용해 다시 처리합니다.
+
 ## 범위
 
 - 일정 시간마다 GitHub Issue를 가져오는 폴링 프로세스
@@ -77,6 +84,7 @@ PostgreSQL에 다음 데이터를 저장합니다.
 ├── app/                    # TypeScript 데몬 (package.json은 여기에 있다)
 │   ├── src/main.ts         # 진입점
 │   ├── src/issues/         # 이슈 소스 인터페이스·구현체·수집기
+│   ├── src/paseo/          # Paseo 연결, 에이전트 러너 인터페이스·구현체·팩토리
 │   └── test/
 ├── docker/paseo.Dockerfile # Paseo 데몬 이미지
 ├── Dockerfile              # 앱 이미지 (build context는 저장소 루트)
@@ -314,7 +322,9 @@ Paseo 데몬 연결 완료
 | --- | --- | --- |
 | `WORKER_AGENT` | `claude_code` 또는 `codex` | `claude_code` |
 | `WORKER_MODEL` | 사용할 모델 (예: `claude-opus-5`, `gpt-5.5`). 안 쓰면 줄을 지워 provider 기본 모델을 쓴다 | (없음) |
-| `AGENT_TIMEOUT_MS` | 에이전트 한 턴의 최대 대기 시간(ms) | `1800000` (30분) |
+| `AGENT_TIMEOUT_MS` | 에이전트 한 턴의 최대 대기 시간(ms). 넘기면 이슈는 `failure`로 기록된다 | `1800000` (30분) |
+| `AGENT_PERMISSION_MODE` | 에이전트 권한 모드 id. 비우면 provider별 무인 실행 기본값을 쓴다. claude_code: `plan` \| `default` \| `acceptEdits` \| `auto` \| `bypassPermissions`, codex: `auto` \| `auto-review` \| `full-access` | claude_code `bypassPermissions`, codex `full-access` |
+| `AGENT_ARCHIVE_AFTER_RUN` | 실행이 끝난 에이전트 세션을 Paseo에서 아카이브한다. worktree는 남긴다 | `true` |
 
 ### Git / Workspace
 
@@ -453,5 +463,7 @@ WHERE "issueId" = '123';
 | `Paseo 데몬에 연결 중` 로그 이후 진행이 없음 | Paseo 데몬에 닿지 못하면 앱이 종료되지 않고 이 단계에서 멈춰 있습니다. Paseo 데몬이 떠 있는지, `PASEO_HOST`/`PASEO_PORT`/`USE_TLS`/`PASEO_PASSWORD`가 맞는지 확인합니다 |
 | `.env에 DB_PASSWORD를 설정하세요` | Docker Compose는 `DB_PASSWORD` 없이 postgres를 띄우지 않습니다. `.env`에 값을 넣습니다 |
 | DB 접속 실패 (`password authentication failed`) | postgres 볼륨은 **첫 기동 때의** 계정 정보로 초기화됩니다. 나중에 `DB_*`를 바꿨다면 DB 쪽 계정도 바꾸거나, 데이터를 버려도 되면 `docker compose down -v`로 초기화합니다 |
+| 이슈가 `failure`이고 `error`가 `권한 요청으로 중단됨` | `AGENT_PERMISSION_MODE`가 도구 사용을 묻는 모드(`default` 등)입니다. 무인 실행이면 줄을 지워 기본값(`bypassPermissions`/`full-access`)을 쓰거나, 필요한 도구가 허용되는 모드로 바꿉니다 |
+| `lastError`가 `[workspace] ...` / `[agent] ...` | 접두사가 실패한 단계입니다. `[workspace]`는 worktree 생성(경로·base 브랜치), `[agent]`는 에이전트 세션 생성(provider·모델·인증) 문제입니다 |
 | workspace 생성 실패 | `PROJECT_PATH`가 Paseo 데몬 기준 경로인지 확인합니다. Docker에서는 컨테이너 안 경로(`/workspace/target-repo`), Host에서는 호스트 절대 경로입니다. 대상 저장소에 `BASE_BRANCH`가 있는지도 확인합니다 |
 | 이슈를 가져오지 않음 | `GITHUB_ISSUE_LABELS`에 맞는 라벨이 붙은 open 이슈인지 확인합니다. PR은 처리하지 않습니다. `issue` 테이블에 이미 있는 이슈도 건너뜁니다 |

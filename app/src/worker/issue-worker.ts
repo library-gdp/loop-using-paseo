@@ -1,15 +1,14 @@
-import type { PaseoClient } from "@getpaseo/client";
 import pLimit, { type LimitFunction } from "p-limit";
 import type { DataSource } from "typeorm";
 import type { Env } from "../config/env.js";
 import { type Issue, IssueEntity } from "../db/entities/index.js";
 import { logger } from "../logger.js";
-import { runIssueTask } from "../paseo/workspace-runner.js";
+import type { AgentRunner, AgentRunOutcome } from "../paseo/agent-runner.js";
 import { renderPrompt } from "../prompts/builtin.js";
 import { getLatestPrompt } from "../prompts/prompt-service.js";
 
 /**
- * 큐에 쌓인 이슈를 꺼내 Paseo에서 처리한다.
+ * 큐에 쌓인 이슈를 꺼내 에이전트 러너로 처리한다.
  * 동시 실행 수는 MAX_CONCURRENT_ISSUES로 제한한다 (worktree 격리 + 자원 보호).
  */
 export class IssueWorker {
@@ -18,7 +17,9 @@ export class IssueWorker {
   constructor(
     private readonly env: Env,
     private readonly dataSource: DataSource,
-    private readonly paseo: PaseoClient,
+    private readonly runner: AgentRunner,
+    /** 종료 신호. abort 되면 진행 중인 에이전트 대기를 끊고 이슈를 큐로 되돌린다. */
+    private readonly signal?: AbortSignal,
   ) {
     this.limit = pLimit(env.MAX_CONCURRENT_ISSUES);
   }
@@ -37,6 +38,9 @@ export class IssueWorker {
   }
 
   private async process(issue: Issue): Promise<void> {
+    // 종료 중이면 새 이슈를 집지 않는다.
+    if (this.signal?.aborted) return;
+
     const issueRepo = this.dataSource.getRepository(IssueEntity);
     const startedAt = new Date();
 
@@ -61,31 +65,38 @@ export class IssueWorker {
         baseBranch: this.env.BASE_BRANCH,
       });
 
-      const outcome = await runIssueTask(this.paseo, this.env, {
-        issueId: issue.issueId,
-        title: issue.title,
-        prompt: rendered,
-      });
+      const outcome = await this.runner.run(
+        { issueId: issue.issueId, title: issue.title, prompt: rendered },
+        { signal: this.signal },
+      );
 
-      const succeeded = outcome.result.status === "idle";
+      if (outcome.status === "cancelled") {
+        // 완료 이력이 아니다. 다음 기동에서 같은 workspace를 재사용해 다시 처리한다.
+        await issueRepo.update(
+          { id: issue.id },
+          { status: "pending", lastError: "종료 신호로 취소됨" },
+        );
+        log.warn({ branch: outcome.branch }, "이슈 처리 취소, 큐로 되돌림");
+        return;
+      }
 
       // 행을 지우지 않고 같은 자리에 결과를 덮어써 처리 이력으로 남긴다.
       await issueRepo.update(
         { id: issue.id },
         {
           status: "done",
-          result: succeeded ? "success" : "failure",
+          result: outcome.status === "success" ? "success" : "failure",
           workspaceId: outcome.workspaceId,
           agentId: outcome.agentId,
           branch: outcome.branch,
           promptVersion: prompt.version,
-          summary: outcome.result.lastMessage,
-          error: outcome.result.error,
+          summary: outcome.lastMessage,
+          error: describeFailure(outcome, this.env.AGENT_TIMEOUT_MS),
           finishedAt: new Date(),
         },
       );
 
-      log.info({ status: outcome.result.status, branch: outcome.branch }, "이슈 처리 완료");
+      log.info({ status: outcome.status, branch: outcome.branch }, "이슈 처리 완료");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const attempts = issue.attempts + 1;
@@ -109,5 +120,21 @@ export class IssueWorker {
       logger.warn({ recovered }, "이전 실행에서 running 상태로 남은 이슈를 복구");
     }
     return recovered;
+  }
+}
+
+/** `issue.error`에 남길 실패 사유. 성공이면 null. */
+function describeFailure(outcome: AgentRunOutcome, timeoutMs: number): string | null {
+  switch (outcome.status) {
+    case "success":
+      return null;
+    case "error":
+      return outcome.error ?? "에이전트가 오류로 종료됨";
+    case "permission":
+      return outcome.error ? `권한 요청으로 중단됨: ${outcome.error}` : "권한 요청으로 중단됨";
+    case "timeout":
+      return `AGENT_TIMEOUT_MS(${timeoutMs}ms) 초과`;
+    case "cancelled":
+      return "종료 신호로 취소됨";
   }
 }
