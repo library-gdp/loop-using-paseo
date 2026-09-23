@@ -48,7 +48,7 @@
 
 - 일정 시간마다 GitHub Issue를 가져오는 폴링 프로세스
 - Paseo SDK를 사용하는 TypeScript 코드
-- built-in 프롬프트
+- 기본 프롬프트 예시 (운영자가 DB에 등록한다. [프롬프트 변경](#프롬프트-변경) 참고)
 - 여러 플랫폼에서 배포할 수 있는 수단 및 가이드
   - Host OS에서 바로 실행
   - Docker 기반 컨테이너 실행 환경
@@ -278,7 +278,7 @@ sudo systemctl enable --now loop-using-paseo
 journalctl -u loop-using-paseo -f
 ```
 
-기동 실패(환경변수 오류, DB 접속 실패 등)로 앱이 종료 코드 1로 끝나면 `Restart=on-failure`가 재시도를 맡습니다.
+기동 실패(환경변수 오류, DB 접속 실패, 쓸 수 있는 프롬프트 없음 등)로 앱이 종료 코드 1로 끝나면 `Restart=on-failure`가 재시도를 맡습니다.
 
 ### 4. 정상 기동 확인
 
@@ -286,6 +286,7 @@ journalctl -u loop-using-paseo -f
 
 ```
 loop-using-paseo 기동
+최신 프롬프트 확인
 Paseo 데몬에 연결 중
 Paseo 데몬 연결 완료
 폴링 루프 시작
@@ -302,6 +303,8 @@ Paseo 데몬 연결 완료
 `SIGTERM`/`SIGINT`(Ctrl+C, `docker compose stop`, `systemctl stop`)를 받으면 스케줄러를 멈추고 Paseo·DB 연결을 닫은 뒤 종료합니다.
 
 처리 중이던 이슈는 DB에 `running` 상태로 남습니다. 다음 기동 때 자동으로 `pending`으로 되돌려 다시 처리합니다.
+
+운영 중 쓸 수 있는 프롬프트가 없어지면(이력이 비었거나 최신 프롬프트에 `{{issueId}}`가 없음) 같은 절차로 정리한 뒤 종료 코드 1로 끝납니다. [프롬프트 변경](#프롬프트-변경)을 참고하세요.
 
 ## 환경변수
 
@@ -385,9 +388,13 @@ Paseo 데몬 연결 완료
 
 ## 프롬프트 변경
 
-에이전트에게는 `prompt_version` 테이블에서 `version`이 가장 큰 프롬프트가 전달됩니다. 테이블이 비어 있으면 첫 기동 때 built-in 프롬프트(`app/src/prompts/builtin.ts`)가 version 1로 들어갑니다.
+에이전트에게는 `prompt_version` 테이블에서 `version`이 가장 큰 프롬프트가 전달됩니다. 데몬은 이 테이블에 아무것도 쓰지 않습니다. **첫 기동 전에 운영자가 프롬프트를 한 개 이상 등록해야 합니다.**
 
-프롬프트를 바꾸려면 더 큰 `version`으로 새 행을 추가합니다. 이슈를 처리할 때마다 최신 프롬프트를 읽으므로 **재기동하지 않아도 됩니다**.
+- 테이블이 비어 있으면 기동 시 `prompt_version 이력이 비어 있습니다` 오류를 남기고 Paseo에 연결하기 전에 종료 코드 1로 끝납니다. 처음 기동할 때는 `DB_SYNCHRONIZE=true`면 테이블까지 만든 뒤 이 오류로 종료되므로, 아래 SQL로 프롬프트를 등록하고 다시 기동하면 됩니다.
+- 운영 중 테이블을 비우면 다음 이슈를 처리하려는 시점에 같은 오류로 데몬이 종료됩니다. 처리하려던 이슈는 시도 횟수를 소비하지 않고 `pending`으로 돌아갑니다.
+- 컨테이너 `restart: unless-stopped`나 systemd `Restart=on-failure`가 걸려 있으면, 프롬프트를 등록할 때까지 재기동과 종료가 반복됩니다. 로그의 fatal 메시지를 보고 프롬프트를 등록하세요.
+
+프롬프트를 등록하거나 바꾸려면 더 큰 `version`으로 새 행을 추가합니다. 아래 SQL은 테이블이 비어 있으면 version 1로, 아니면 현재 최대값 + 1로 넣습니다. 이슈를 처리할 때마다 최신 프롬프트를 읽으므로 운영 중 변경은 **재기동하지 않아도 됩니다**. 이미 있는 `version`과 같은 값은 unique 제약으로 거부되고, 최대값보다 작은 `version`을 넣으면 최신으로 쓰이지 않습니다. 이슈마다 어떤 버전을 썼는지는 `issue."promptVersion"`에 남습니다.
 
 ```bash
 # Docker Compose 기준. Host라면 psql로 같은 DB에 접속한다.
@@ -397,24 +404,42 @@ docker compose exec postgres psql -U loop -d loop
 ```sql
 INSERT INTO prompt_version (version, content, description)
 SELECT COALESCE(MAX(version), 0) + 1,
-       $$이슈 #{{issueId}} "{{title}}" 를 해결하세요.
+       $$당신은 이 저장소에서 작업하는 소프트웨어 엔지니어입니다.
+아래 GitHub Issue를 읽고, 현재 worktree에서 해결하세요.
 
-{{body}}$$,
-       '간결한 지시문으로 변경'
+- 이슈: #{{issueId}}
+- 제목: {{title}}
+- 링크: {{url}}
+- 라벨: {{labels}}
+- base 브랜치: {{baseBranch}}
+
+--- 이슈 본문 ---
+{{body}}
+--- 본문 끝 ---
+
+작업 지침:
+1. 변경 범위는 이슈가 요구하는 내용으로 한정합니다.
+2. 저장소의 기존 코드 스타일과 테스트 관례를 따릅니다.
+3. 테스트가 있다면 실행해 통과를 확인합니다.
+4. 마지막에 무엇을 왜 바꿨는지 3줄 이내로 요약합니다.
+$$,
+       '기본 프롬프트'
 FROM prompt_version;
 ```
 
 프롬프트에서 쓸 수 있는 자리표시자:
 
-| 자리표시자 | 값 |
-| --- | --- |
-| `{{repository}}` | `owner/repo` |
-| `{{issueId}}` | 이슈 식별자 (GitHub은 이슈 번호). 예전 이름인 `{{issueNumber}}`도 같은 값으로 치환된다 |
-| `{{title}}` | 이슈 제목 |
-| `{{url}}` | 이슈 링크 |
-| `{{labels}}` | 쉼표로 이은 라벨 목록 (없으면 `(없음)`) |
-| `{{body}}` | 이슈 본문 (없으면 `(본문 없음)`) |
-| `{{baseBranch}}` | `BASE_BRANCH` 값 |
+| 자리표시자 | 값 | 필수 |
+| --- | --- | --- |
+| `{{issueId}}` | 이슈 식별자 (GitHub은 이슈 번호) | 예 |
+| `{{title}}` | 이슈 제목 | |
+| `{{url}}` | 이슈 링크 (`owner/repo`가 들어 있다) | |
+| `{{labels}}` | 쉼표로 이은 라벨 목록 (없으면 `(없음)`) | |
+| `{{body}}` | 이슈 본문 (없으면 `(본문 없음)`) | |
+| `{{baseBranch}}` | `BASE_BRANCH` 값 | |
+
+- 최신 프롬프트에 **`{{issueId}}`가 없으면** 기동 시와 이슈 처리 시 모두 `필수 자리표시자 {{issueId}}가 없습니다` 오류로 데몬이 종료됩니다. 자리표시자를 넣은 프롬프트를 더 큰 `version`으로 추가하세요.
+- 표에 없는 자리표시자는 치환하지 않고 그대로 전달하며, 이슈를 처리할 때마다 `알 수 없는 자리표시자` 경고 로그를 남깁니다. 예전 이름인 `{{issueNumber}}`(→ `{{issueId}}`)와 `{{repository}}`(에이전트는 이미 대상 저장소의 worktree에서 작업하고, `{{url}}`에 `owner/repo`가 있다)는 더 이상 치환되지 않습니다. 예전 기본 프롬프트를 쓰고 있다면 `- 저장소: {{repository}}` 줄을 뺀 새 version을 추가하세요.
 
 ## 이슈 처리 상태 확인
 
@@ -461,6 +486,9 @@ WHERE "issueId" = '123';
 | --- | --- |
 | `환경변수 설정이 올바르지 않습니다` | 로그에 찍힌 항목을 고칩니다. 값이 비어 있는 `PASEO_PASSWORD`/`WORKER_MODEL` 줄이 남아 있으면 지웁니다. Host 실행에서 `expected string, received undefined`가 여러 개 나오면 `--env-file`을 빠뜨린 것입니다 |
 | `Paseo 데몬에 연결 중` 로그 이후 진행이 없음 | Paseo 데몬에 닿지 못하면 앱이 종료되지 않고 이 단계에서 멈춰 있습니다. Paseo 데몬이 떠 있는지, `PASEO_HOST`/`PASEO_PORT`/`USE_TLS`/`PASEO_PASSWORD`가 맞는지 확인합니다 |
+| `prompt_version 이력이 비어 있습니다` | 등록된 프롬프트가 없습니다. [프롬프트 변경](#프롬프트-변경)의 SQL로 프롬프트를 등록한 뒤 다시 기동합니다 |
+| `필수 자리표시자 {{issueId}}가 없습니다` | 최신 프롬프트에 `{{issueId}}`가 없습니다. 자리표시자를 넣은 프롬프트를 더 큰 `version`으로 추가한 뒤 다시 기동합니다 |
+| `알 수 없는 자리표시자` 경고 | 최신 프롬프트에 치환되지 않는 `{{...}}`가 있습니다. 오타이거나 제거된 `{{issueNumber}}`/`{{repository}}`입니다. 고친 프롬프트를 더 큰 `version`으로 추가합니다 |
 | `.env에 DB_PASSWORD를 설정하세요` | Docker Compose는 `DB_PASSWORD` 없이 postgres를 띄우지 않습니다. `.env`에 값을 넣습니다 |
 | DB 접속 실패 (`password authentication failed`) | postgres 볼륨은 **첫 기동 때의** 계정 정보로 초기화됩니다. 나중에 `DB_*`를 바꿨다면 DB 쪽 계정도 바꾸거나, 데이터를 버려도 되면 `docker compose down -v`로 초기화합니다 |
 | 이슈가 `failure`이고 `error`가 `권한 요청으로 중단됨` | `AGENT_PERMISSION_MODE`가 도구 사용을 묻는 모드(`default` 등)입니다. 무인 실행이면 줄을 지워 기본값(`bypassPermissions`/`full-access`)을 쓰거나, 필요한 도구가 허용되는 모드로 바꿉니다 |
