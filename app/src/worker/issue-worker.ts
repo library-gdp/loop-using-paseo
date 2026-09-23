@@ -1,4 +1,3 @@
-import pLimit, { type LimitFunction } from "p-limit";
 import type { DataSource } from "typeorm";
 import type { Env } from "../config/env.js";
 import { type Issue, IssueEntity } from "../db/entities/index.js";
@@ -7,12 +6,8 @@ import type { AgentRunner, AgentRunOutcome } from "../paseo/agent-runner.js";
 import { getLatestPrompt, UnusablePromptError } from "../prompts/prompt-service.js";
 import { findUnknownPlaceholders, renderPrompt } from "../prompts/render.js";
 
-/**
- * 큐에 쌓인 이슈를 꺼내 에이전트 러너로 처리한다.
- * 동시 실행 수는 MAX_CONCURRENT_ISSUES로 제한한다 (worktree 격리 + 자원 보호).
- */
+/** 큐에 쌓인 이슈를 하나씩 꺼내 에이전트 러너로 처리한다. */
 export class IssueWorker {
-  private readonly limit: LimitFunction;
   /** 쓸 수 있는 프롬프트가 없어 종료를 요청했다. 이후 이슈는 집지 않는다. */
   private halted = false;
 
@@ -24,9 +19,7 @@ export class IssueWorker {
     private readonly signal?: AbortSignal,
     /** 프롬프트를 쓸 수 없어 더 처리할 수 없을 때 호출된다. 데몬 종료는 호출한 쪽이 맡는다. */
     private readonly onFatal?: (error: UnusablePromptError) => void,
-  ) {
-    this.limit = pLimit(env.MAX_CONCURRENT_ISSUES);
-  }
+  ) {}
 
   async drain(): Promise<void> {
     const repo = this.dataSource.getRepository(IssueEntity);
@@ -38,7 +31,9 @@ export class IssueWorker {
     if (queued.length === 0) return;
     logger.info({ count: queued.length }, "대기 중인 이슈 처리 시작");
 
-    await Promise.all(queued.map((issue) => this.limit(() => this.process(issue))));
+    for (const issue of queued) {
+      await this.process(issue);
+    }
   }
 
   private async process(issue: Issue): Promise<void> {
@@ -51,7 +46,7 @@ export class IssueWorker {
     // 상태를 pending -> running으로 원자적으로 바꾼 쪽만 실제로 처리한다.
     const claimed = await issueRepo.update(
       { id: issue.id, status: "pending" },
-      { status: "running", attempts: issue.attempts + 1, startedAt },
+      { status: "running", startedAt },
     );
     if (claimed.affected === 0) return;
 
@@ -83,10 +78,7 @@ export class IssueWorker {
 
       if (outcome.status === "cancelled") {
         // 완료 이력이 아니다. 다음 기동에서 같은 workspace를 재사용해 다시 처리한다.
-        await issueRepo.update(
-          { id: issue.id },
-          { status: "pending", lastError: "종료 신호로 취소됨" },
-        );
+        await issueRepo.update({ id: issue.id }, { status: "pending" });
         log.warn({ branch: outcome.branch }, "이슈 처리 취소, 큐로 되돌림");
         return;
       }
@@ -110,16 +102,12 @@ export class IssueWorker {
       log.info({ status: outcome.status, branch: outcome.branch }, "이슈 처리 완료");
     } catch (error) {
       if (error instanceof UnusablePromptError) {
-        // 이슈 탓이 아니므로 시도 횟수를 소비하지 않고 선점 전 상태로 되돌린 뒤 종료를 요청한다.
+        // 이슈 탓이 아니므로 선점 전 상태로 되돌린 뒤 종료를 요청한다.
         this.halted = true;
         try {
-          await issueRepo.update(
-            { id: issue.id },
-            { status: "pending", attempts: issue.attempts, lastError: error.message },
-          );
+          await issueRepo.update({ id: issue.id }, { status: "pending" });
           log.error({ err: error }, "쓸 수 있는 프롬프트가 없어 이슈를 큐로 되돌리고 처리 중단");
         } catch (revertError) {
-          // 되돌리지 못해도 running으로 남은 행은 다음 기동의 recoverStaleRunning이 복구한다.
           log.error(
             { err: error, revertError },
             "쓸 수 있는 프롬프트가 없어 처리 중단, 이슈를 큐로 되돌리지 못함",
@@ -132,27 +120,14 @@ export class IssueWorker {
       }
 
       const message = error instanceof Error ? error.message : String(error);
-      const attempts = issue.attempts + 1;
-      const exhausted = attempts >= this.env.MAX_ATTEMPTS;
 
       await issueRepo.update(
         { id: issue.id },
-        { status: exhausted ? "failed" : "pending", lastError: message },
+        { status: "done", result: "failure", error: message, finishedAt: new Date() },
       );
 
-      log.error({ err: error, attempts, exhausted }, "이슈 처리 실패");
+      log.error({ err: error }, "이슈 처리 실패");
     }
-  }
-
-  /** 기동 시 호출: 비정상 종료로 running에 묶인 이슈를 다시 큐로 돌린다. */
-  async recoverStaleRunning(): Promise<number> {
-    const repo = this.dataSource.getRepository(IssueEntity);
-    const result = await repo.update({ status: "running" }, { status: "pending" });
-    const recovered = result.affected ?? 0;
-    if (recovered > 0) {
-      logger.warn({ recovered }, "이전 실행에서 running 상태로 남은 이슈를 복구");
-    }
-    return recovered;
   }
 }
 

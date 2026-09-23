@@ -49,8 +49,6 @@ async function main(): Promise<void> {
   const worker = new IssueWorker(env, dataSource, runner, shutdownController.signal, (error) => {
     void shutdown.onFatal(error);
   });
-  await worker.recoverStaleRunning();
-
   loop = startPollingLoop({ intervalMs: env.POLL_INTERVAL_MS, collector, worker });
 
   process.on("SIGTERM", (signal) => void shutdown.onSignal(signal));

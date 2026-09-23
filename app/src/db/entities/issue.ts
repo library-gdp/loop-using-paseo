@@ -5,9 +5,8 @@ import { EntitySchema } from "typeorm";
  *
  * - `pending` / `running`: 아직 처리 중인 큐 항목
  * - `done`: 에이전트 실행이 끝난 이력. 성패는 `result`가 구분한다.
- * - `failed`: 오류가 `MAX_ATTEMPTS`번 쌓여 더 시도하지 않는 항목
  */
-export type IssueStatus = "pending" | "running" | "done" | "failed";
+export type IssueStatus = "pending" | "running" | "done";
 
 export type IssueResult = "success" | "failure";
 
@@ -27,8 +26,6 @@ export interface Issue {
   url: string;
   labels: string[];
   status: IssueStatus;
-  attempts: number;
-  lastError: string | null;
   issueUpdatedAt: Date;
   result: IssueResult | null;
   workspaceId: string | null;
@@ -55,8 +52,6 @@ export const IssueEntity = new EntitySchema<Issue>({
     url: { type: String, length: 512 },
     labels: { type: "simple-array", default: "" },
     status: { type: String, length: 16, default: "pending" },
-    attempts: { type: Number, default: 0 },
-    lastError: { type: "text", nullable: true },
     issueUpdatedAt: { type: "timestamptz" },
     result: { type: String, length: 16, nullable: true },
     workspaceId: { type: String, length: 128, nullable: true },

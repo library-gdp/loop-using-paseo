@@ -40,7 +40,7 @@
 2·3단계는 `app/src/paseo/`의 에이전트 러너가 담당하며 다음 규칙으로 동작합니다.
 
 - **권한 모드**: 데몬은 무인으로 돌기 때문에 에이전트를 `AGENT_PERMISSION_MODE`(기본: claude_code `bypassPermissions`, codex `full-access`)로 만듭니다. 그래도 권한 요청이 생기면 사람 대신 **거부하고 중단**시킨 뒤 이슈를 `failure`(`error`에 `권한 요청으로 중단됨`)로 기록합니다. `default`·`acceptEdits` 같은 제한 모드는 의도적으로 제한한 것으로 보고 임의 승인하지 않습니다.
-- **workspace 재사용**: 같은 이슈를 다시 처리할 때(재시도, 취소 후 재기동) 같은 브랜치(`BRANCH_PREFIX + 이슈 ID`)의 workspace가 Paseo에 남아 있으면 새로 만들지 않고 그 worktree에서 이어서 작업합니다.
+- **workspace 재사용**: 같은 이슈를 다시 처리할 때(취소 후 재기동, 운영자가 다시 큐에 넣은 경우) 같은 브랜치(`BRANCH_PREFIX + 이슈 ID`)의 workspace가 Paseo에 남아 있으면 새로 만들지 않고 그 worktree에서 이어서 작업합니다.
 - **세션 정리**: 실행이 끝나면 에이전트 세션은 아카이브하고(`AGENT_ARCHIVE_AFTER_RUN`), worktree는 결과 확인·PR 생성을 위해 남깁니다.
 - **종료 신호**: 에이전트 실행 중 SIGTERM/SIGINT를 받으면 완료를 기다리지 않고 이슈를 `pending`으로 되돌린 뒤 종료합니다. 에이전트는 Paseo 안에서 계속 돌 수 있으며, 다음 기동에서 같은 workspace를 재사용해 다시 처리합니다.
 
@@ -53,7 +53,6 @@
   - Host OS에서 바로 실행
   - Docker 기반 컨테이너 실행 환경
 - 커스터마이징 수단: 프롬프트, Cron job 주기, 런타임, GitHub Issue 템플릿, 사용할 AI 에이전트(Claude Code, Codex), 사용할 AI 모델 등
-- Paseo를 컨테이너 기반으로 배포하기 위한 Dockerfile
 
 ### 범위에 포함되지 않는 것
 
@@ -86,7 +85,6 @@ PostgreSQL에 다음 데이터를 저장합니다.
 │   ├── src/issues/         # 이슈 소스 인터페이스·구현체·수집기
 │   ├── src/paseo/          # Paseo 연결, 에이전트 러너 인터페이스·구현체·팩토리
 │   └── test/
-├── docker/paseo.Dockerfile # Paseo 데몬 이미지
 ├── Dockerfile              # 앱 이미지 (build context는 저장소 루트)
 ├── docker-compose.yml      # app + paseo + postgres
 └── .env.example            # 환경변수 템플릿 (.env는 저장소 루트에 둔다)
@@ -106,7 +104,7 @@ PostgreSQL에 다음 데이터를 저장합니다.
 | GitHub 토큰 | 대상 저장소의 이슈를 읽을 수 있는 토큰. Fine-grained PAT이면 `Issues: Read-only`, classic PAT이면 `repo` 스코프 |
 | 작업 대상 저장소 | 로컬에 clone된 git 저장소. `BASE_BRANCH`(기본 `dev`) 브랜치가 있어야 합니다. Paseo가 여기서 이슈별 worktree를 분기합니다 |
 | AI 에이전트 인증 | Claude Code를 쓰면 Anthropic 인증, Codex를 쓰면 OpenAI 인증이 **Paseo가 도는 환경**에 있어야 합니다 |
-| Docker 방식 | Docker Engine과 Docker Compose v2 |
+| Docker 방식 | Docker Engine과 Docker Compose v2, `WORKER_AGENT`의 CLI(Claude Code 또는 Codex)가 들어 있는 Paseo 데몬 이미지 |
 | Host OS 방식 | Node.js `22.13.0` 이상, git, PostgreSQL, Paseo CLI(`@getpaseo/cli`) |
 
 ### 2. `.env` 작성
@@ -138,6 +136,9 @@ DB_PASSWORD=change-me
 아래 값은 `.env.example`에 없지만 `docker-compose.yml`이 읽는 값입니다. 필요한 것만 `.env`에 추가합니다.
 
 ```dotenv
+# Paseo 데몬 이미지. WORKER_AGENT의 CLI가 들어 있어야 한다. (필수)
+PASEO_IMAGE=registry.example.com/paseo:0.8.0
+
 # 작업 대상 저장소의 호스트 경로. paseo 컨테이너의 /workspace/target-repo 에 마운트된다.
 TARGET_REPO_PATH=/home/me/projects/target-repo
 
@@ -156,13 +157,7 @@ GIT_AUTHOR_EMAIL=loop@example.com
 
 #### (2) Codex를 쓰는 경우
 
-Paseo 이미지에 Codex CLI가 들어가도록 `docker-compose.yml`의 build args를 바꾸고, `.env`의 에이전트를 바꿉니다.
-
-```yaml
-# docker-compose.yml > services.paseo.build.args
-CLAUDE_CODE_VERSION: ""
-CODEX_VERSION: "latest"
-```
+`PASEO_IMAGE`에 Codex CLI가 들어 있는 이미지를 지정하고, `.env`의 에이전트를 바꿉니다.
 
 ```dotenv
 WORKER_AGENT=codex
@@ -175,7 +170,7 @@ OPENAI_API_KEY=sk-xxx
 docker compose up -d --build
 ```
 
-postgres가 healthy가 된 뒤에 app이 뜹니다. `.env`에 `DB_PASSWORD`가 없으면 `.env에 DB_PASSWORD를 설정하세요` 오류와 함께 postgres가 기동하지 않습니다.
+postgres가 healthy가 된 뒤에 app이 뜹니다. `.env`에 `PASEO_IMAGE`가 없으면 paseo 컨테이너가 `set-paseo_image-in-env` 이미지를 받지 못해 기동하지 않습니다. `DB_PASSWORD`가 없으면 `.env에 DB_PASSWORD를 설정하세요` 오류와 함께 postgres가 기동하지 않습니다.
 
 #### (4) 확인과 운영
 
@@ -213,7 +208,7 @@ paseo daemon start --listen 127.0.0.1:6767
 docker compose up -d postgres
 ```
 
-테이블은 `DB_SYNCHRONIZE=true`(기본값)일 때 기동하면서 자동으로 만들어집니다.
+테이블은 기동하면서 엔티티 기준으로 자동으로 만들어집니다.
 
 #### (3) `.env` 수정
 
@@ -225,8 +220,6 @@ PASEO_HOST=localhost
 DB_HOST=localhost
 # Paseo 데몬이 보는 경로. Host 실행이면 호스트의 절대 경로다.
 PROJECT_PATH=/home/me/projects/target-repo
-# 사람이 읽기 좋은 로그 (선택)
-LOG_PRETTY=true
 ```
 
 #### (4) 빌드와 실행
@@ -302,7 +295,7 @@ Paseo 데몬 연결 완료
 
 `SIGTERM`/`SIGINT`(Ctrl+C, `docker compose stop`, `systemctl stop`)를 받으면 스케줄러를 멈추고 Paseo·DB 연결을 닫은 뒤 종료합니다.
 
-처리 중이던 이슈는 DB에 `running` 상태로 남습니다. 다음 기동 때 자동으로 `pending`으로 되돌려 다시 처리합니다.
+처리 중이던 이슈는 `pending`으로 되돌려 다음 기동 때 다시 처리합니다. 프로세스가 강제 종료(`SIGKILL`, 크래시)되면 이슈가 `running`으로 남고 자동으로 복구되지 않으므로, [이슈 처리 상태 확인](#이슈-처리-상태-확인)의 SQL로 다시 큐에 넣습니다.
 
 운영 중 쓸 수 있는 프롬프트가 없어지면(이력이 비었거나 최신 프롬프트에 `{{issueId}}`가 없음) 같은 절차로 정리한 뒤 종료 코드 1로 끝납니다. [프롬프트 변경](#프롬프트-변경)을 참고하세요.
 
@@ -344,7 +337,6 @@ Paseo 데몬 연결 완료
 | `GITHUB_TOKEN` | 이슈 조회용 토큰 | **필수** |
 | `GITHUB_REPOSITORY` | `owner/repo` 형식 | **필수** |
 | `GITHUB_ISSUE_LABELS` | 쉼표로 구분한 라벨. 지정하면 해당 라벨이 붙은 open 이슈만 처리한다 | (전체 open 이슈) |
-| `GITHUB_API_BASE_URL` | GitHub Enterprise Server를 쓸 때만 바꾼다 | `https://api.github.com` |
 
 ### Loop
 
@@ -352,8 +344,6 @@ Paseo 데몬 연결 완료
 | --- | --- | --- |
 | `ISSUE_SOURCE` | 이슈를 가져올 소스. 현재 지원: `github` | `github` |
 | `POLL_INTERVAL_MS` | 폴링 주기(ms). 사이클이 끝난 뒤 이만큼 쉬고 다음 사이클을 시작한다 | `10000` (10초) |
-| `MAX_CONCURRENT_ISSUES` | 동시에 처리할 이슈 수. worktree는 이슈마다 따로 생긴다 | `1` |
-| `MAX_ATTEMPTS` | 실패한 이슈 재시도 횟수. 넘으면 `failed`로 남는다 | `3` |
 
 ### Database (PostgreSQL)
 
@@ -364,8 +354,6 @@ Paseo 데몬 연결 완료
 | `DB_USERNAME` | 접속 계정 | **필수** (`.env.example`: `loop`) |
 | `DB_PASSWORD` | 접속 비밀번호. Docker Compose에서는 필수 | (없음) |
 | `DB_NAME` | DB 이름 | **필수** (`.env.example`: `loop`) |
-| `DB_SYNCHRONIZE` | 기동 시 엔티티 기준으로 스키마를 자동 동기화 | `true` |
-| `DB_LOGGING` | TypeORM SQL 로그 출력 | `false` |
 
 ### Runtime
 
@@ -373,7 +361,6 @@ Paseo 데몬 연결 완료
 | --- | --- | --- |
 | `DEPLOYMENT` | 배포 환경. `docker` 또는 `host` | `docker` |
 | `LOG_LEVEL` | `fatal` \| `error` \| `warn` \| `info` \| `debug` \| `trace` | `info` |
-| `LOG_PRETTY` | `true`면 사람이 읽기 좋은 로그, 아니면 JSON 로그 | `false` |
 
 ### Docker Compose 전용
 
@@ -381,6 +368,7 @@ Paseo 데몬 연결 완료
 
 | 이름 | 설명 | 기본값 |
 | --- | --- | --- |
+| `PASEO_IMAGE` | paseo 컨테이너로 띄울 Paseo 데몬 이미지. `WORKER_AGENT`의 CLI가 들어 있어야 한다 | **필수** |
 | `TARGET_REPO_PATH` | paseo 컨테이너에 마운트할 작업 대상 저장소의 호스트 경로 | `./target-repo` |
 | `ANTHROPIC_API_KEY` | Claude Code 인증 | (없음) |
 | `OPENAI_API_KEY` | Codex 인증 | (없음) |
@@ -390,8 +378,8 @@ Paseo 데몬 연결 완료
 
 에이전트에게는 `prompt_version` 테이블에서 `version`이 가장 큰 프롬프트가 전달됩니다. 데몬은 이 테이블에 아무것도 쓰지 않습니다. **첫 기동 전에 운영자가 프롬프트를 한 개 이상 등록해야 합니다.**
 
-- 테이블이 비어 있으면 기동 시 `prompt_version 이력이 비어 있습니다` 오류를 남기고 Paseo에 연결하기 전에 종료 코드 1로 끝납니다. 처음 기동할 때는 `DB_SYNCHRONIZE=true`면 테이블까지 만든 뒤 이 오류로 종료되므로, 아래 SQL로 프롬프트를 등록하고 다시 기동하면 됩니다.
-- 운영 중 테이블을 비우면 다음 이슈를 처리하려는 시점에 같은 오류로 데몬이 종료됩니다. 처리하려던 이슈는 시도 횟수를 소비하지 않고 `pending`으로 돌아갑니다.
+- 테이블이 비어 있으면 기동 시 `prompt_version 이력이 비어 있습니다` 오류를 남기고 Paseo에 연결하기 전에 종료 코드 1로 끝납니다. 처음 기동할 때는 테이블까지 만든 뒤 이 오류로 종료되므로, 아래 SQL로 프롬프트를 등록하고 다시 기동하면 됩니다.
+- 운영 중 테이블을 비우면 다음 이슈를 처리하려는 시점에 같은 오류로 데몬이 종료됩니다. 처리하려던 이슈는 `pending`으로 돌아갑니다.
 - 컨테이너 `restart: unless-stopped`나 systemd `Restart=on-failure`가 걸려 있으면, 프롬프트를 등록할 때까지 재기동과 종료가 반복됩니다. 로그의 fatal 메시지를 보고 프롬프트를 등록하세요.
 
 프롬프트를 등록하거나 바꾸려면 더 큰 `version`으로 새 행을 추가합니다. 아래 SQL은 테이블이 비어 있으면 version 1로, 아니면 현재 최대값 + 1로 넣습니다. 이슈를 처리할 때마다 최신 프롬프트를 읽으므로 운영 중 변경은 **재기동하지 않아도 됩니다**. 이미 있는 `version`과 같은 값은 unique 제약으로 거부되고, 최대값보다 작은 `version`을 넣으면 최신으로 쓰이지 않습니다. 이슈마다 어떤 버전을 썼는지는 `issue."promptVersion"`에 남습니다.
@@ -445,7 +433,7 @@ FROM prompt_version;
 
 | 테이블 | 내용 |
 | --- | --- |
-| `issue` | 수집된 이슈의 큐이자 처리 이력. `status`는 `pending` → `running` → `done`이고, 실패가 `MAX_ATTEMPTS`번 쌓이면 `failed`가 된다. `done` 행에는 `result`(`success`/`failure`), 브랜치, 사용한 프롬프트 버전, 에이전트 요약이 남는다 |
+| `issue` | 수집된 이슈의 큐이자 처리 이력. `status`는 `pending` → `running` → `done`이다. 실패한 이슈도 다시 시도하지 않고 `done`/`failure`로 남는다. `done` 행에는 `result`(`success`/`failure`), 브랜치, 사용한 프롬프트 버전, 에이전트 요약, 실패 사유(`error`)가 남는다 |
 
 TypeORM 기본 명명 규칙을 따르므로 camelCase 컬럼은 큰따옴표로 감싸야 합니다.
 
@@ -454,12 +442,11 @@ TypeORM 기본 명명 규칙을 따르므로 camelCase 컬럼은 큰따옴표로
 SELECT "issueId", result, branch, "promptVersion", "finishedAt"
 FROM issue WHERE status = 'done' ORDER BY "finishedAt" DESC LIMIT 20;
 
--- 재시도 횟수를 넘겨 멈춘 이슈
-SELECT "issueId", attempts, "lastError" FROM issue WHERE status = 'failed';
+-- 실패한 이슈
+SELECT "issueId", error FROM issue WHERE status = 'done' AND result = 'failure';
 
--- 멈춘 이슈를 다시 큐에 넣기 (다음 사이클에 처리된다)
-UPDATE issue SET status = 'pending', attempts = 0, "lastError" = NULL
-WHERE "issueId" = '123';
+-- 실패했거나 running으로 남은 이슈를 다시 큐에 넣기 (다음 사이클에 처리된다)
+UPDATE issue SET status = 'pending' WHERE "issueId" = '123';
 ```
 
 ## 개발
@@ -489,9 +476,10 @@ WHERE "issueId" = '123';
 | `prompt_version 이력이 비어 있습니다` | 등록된 프롬프트가 없습니다. [프롬프트 변경](#프롬프트-변경)의 SQL로 프롬프트를 등록한 뒤 다시 기동합니다 |
 | `필수 자리표시자 {{issueId}}가 없습니다` | 최신 프롬프트에 `{{issueId}}`가 없습니다. 자리표시자를 넣은 프롬프트를 더 큰 `version`으로 추가한 뒤 다시 기동합니다 |
 | `알 수 없는 자리표시자` 경고 | 최신 프롬프트에 치환되지 않는 `{{...}}`가 있습니다. 오타이거나 제거된 `{{issueNumber}}`/`{{repository}}`입니다. 고친 프롬프트를 더 큰 `version`으로 추가합니다 |
+| `set-paseo_image-in-env` 이미지 pull 실패 | `.env`에 `PASEO_IMAGE`가 없습니다. `WORKER_AGENT`의 CLI가 들어 있는 Paseo 데몬 이미지를 지정합니다 |
 | `.env에 DB_PASSWORD를 설정하세요` | Docker Compose는 `DB_PASSWORD` 없이 postgres를 띄우지 않습니다. `.env`에 값을 넣습니다 |
 | DB 접속 실패 (`password authentication failed`) | postgres 볼륨은 **첫 기동 때의** 계정 정보로 초기화됩니다. 나중에 `DB_*`를 바꿨다면 DB 쪽 계정도 바꾸거나, 데이터를 버려도 되면 `docker compose down -v`로 초기화합니다 |
 | 이슈가 `failure`이고 `error`가 `권한 요청으로 중단됨` | `AGENT_PERMISSION_MODE`가 도구 사용을 묻는 모드(`default` 등)입니다. 무인 실행이면 줄을 지워 기본값(`bypassPermissions`/`full-access`)을 쓰거나, 필요한 도구가 허용되는 모드로 바꿉니다 |
-| `lastError`가 `[workspace] ...` / `[agent] ...` | 접두사가 실패한 단계입니다. `[workspace]`는 worktree 생성(경로·base 브랜치), `[agent]`는 에이전트 세션 생성(provider·모델·인증) 문제입니다 |
+| `error`가 `[workspace] ...` / `[agent] ...` | 접두사가 실패한 단계입니다. `[workspace]`는 worktree 생성(경로·base 브랜치), `[agent]`는 에이전트 세션 생성(provider·모델·인증) 문제입니다 |
 | workspace 생성 실패 | `PROJECT_PATH`가 Paseo 데몬 기준 경로인지 확인합니다. Docker에서는 컨테이너 안 경로(`/workspace/target-repo`), Host에서는 호스트 절대 경로입니다. 대상 저장소에 `BASE_BRANCH`가 있는지도 확인합니다 |
 | 이슈를 가져오지 않음 | `GITHUB_ISSUE_LABELS`에 맞는 라벨이 붙은 open 이슈인지 확인합니다. PR은 처리하지 않습니다. `issue` 테이블에 이미 있는 이슈도 건너뜁니다 |

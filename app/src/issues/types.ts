@@ -2,7 +2,7 @@
  * 소스에서 가져온 이슈를 provider 중립 형태로 정규화한 타입.
  *
  * `issue` 컬럼 중 큐 적재에 필요한 부분집합과 대응한다.
- * 상태 컬럼(status, attempts, lastError)은 적재 시점에 수집기가 초기값으로 채운다.
+ * 상태 컬럼(status)은 적재 시점에 수집기가 초기값으로 채운다.
  */
 export interface SourceIssue {
   /** 소스 기준 저장소 식별자. GitHub은 `owner/repo`. */

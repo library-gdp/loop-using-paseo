@@ -81,7 +81,6 @@ export const envSchema = z.object({
   GITHUB_REPOSITORY: z.string().regex(/^[^/\s]+\/[^/\s]+$/, "owner/repo 형식이어야 합니다"),
   /** 지정하면 해당 라벨이 붙은 이슈만 처리한다. 비우면 전체. */
   GITHUB_ISSUE_LABELS: csv,
-  GITHUB_API_BASE_URL: z.string().url().default("https://api.github.com"),
 
   // ── Issue Source ─────────────────────────────────────────────────────────
   /** 이슈를 가져올 소스. 새 소스를 추가하면 여기와 소스 팩토리에 값을 늘린다. */
@@ -90,9 +89,6 @@ export const envSchema = z.object({
   // ── Loop ─────────────────────────────────────────────────────────────────
   /** 폴링 주기(ms). 한 사이클이 끝난 뒤 이 시간만큼 쉬고 다음 사이클을 시작한다. */
   POLL_INTERVAL_MS: z.coerce.number().int().positive().default(10_000),
-  MAX_CONCURRENT_ISSUES: z.coerce.number().int().positive().default(1),
-  /** 실패한 이슈를 다시 시도할 최대 횟수. */
-  MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
 
   // ── Database (PostgreSQL) ────────────────────────────────────────────────
   DB_HOST: z.string().min(1).default("localhost"),
@@ -100,16 +96,12 @@ export const envSchema = z.object({
   DB_USERNAME: z.string().min(1),
   DB_PASSWORD: z.string().optional(),
   DB_NAME: z.string().min(1),
-  /** 운영에서는 false로 두고 마이그레이션을 사용한다. */
-  DB_SYNCHRONIZE: booleanish.default(true),
-  DB_LOGGING: booleanish.default(false),
 
   // ── Runtime ──────────────────────────────────────────────────────────────
   DEPLOYMENT: lowercased(z.enum(["docker", "host"])).default("docker"),
   LOG_LEVEL: lowercased(z.enum(["fatal", "error", "warn", "info", "debug", "trace"])).default(
     "info",
   ),
-  LOG_PRETTY: booleanish.default(false),
 });
 
 export type Env = z.infer<typeof envSchema>;
