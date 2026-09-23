@@ -13,16 +13,10 @@ function isLevel(value: string): value is Level {
  */
 const rawLevel = (process.env.LOG_LEVEL ?? "info").trim().toLowerCase();
 const level: Level = isLevel(rawLevel) ? rawLevel : "info";
-const pretty = ["1", "true", "yes", "on"].includes(
-  (process.env.LOG_PRETTY ?? "").trim().toLowerCase(),
-);
 
 export const logger = pino({
   level,
   base: { service: "loop-using-paseo" },
-  ...(pretty
-    ? { transport: { target: "pino-pretty", options: { translateTime: "SYS:standard" } } }
-    : {}),
 });
 
 export type Logger = typeof logger;

@@ -16,7 +16,6 @@ interface ThrottleOptions {
 export function createGitHubClient(env: Env): GitHubClient {
   return new Octokit({
     auth: env.GITHUB_TOKEN,
-    baseUrl: env.GITHUB_API_BASE_URL,
     userAgent: "loop-using-paseo",
     throttle: {
       onRateLimit: (

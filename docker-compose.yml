@@ -2,14 +2,9 @@
 #   cp .env.example .env  후 값을 채우고  docker compose up -d --build
 services:
   paseo:
-    build:
-      context: .
-      dockerfile: docker/paseo.Dockerfile
-      args:
-        PASEO_VERSION: "0.8.0"
-        # codex를 쓰려면 CODEX_VERSION을 채우고 CLAUDE_CODE_VERSION을 비운다.
-        CLAUDE_CODE_VERSION: "latest"
-        CODEX_VERSION: ""
+    # WORKER_AGENT의 CLI(Claude Code 또는 Codex)가 들어 있는 Paseo 데몬 이미지.
+    # 비워 두면 존재하지 않는 이미지 이름이 들어가 pull 단계에서 실패한다. postgres만 띄울 때는 영향 없다.
+    image: ${PASEO_IMAGE:-set-paseo_image-in-env}
     init: true
     environment:
       PASEO_PASSWORD: ${PASEO_PASSWORD:-}

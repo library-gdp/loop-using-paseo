@@ -39,8 +39,6 @@ export class IssueCollector {
         url: issue.url,
         labels: issue.labels,
         status: "pending",
-        attempts: 0,
-        lastError: null,
         issueUpdatedAt: issue.issueUpdatedAt,
         result: null,
         workspaceId: null,
