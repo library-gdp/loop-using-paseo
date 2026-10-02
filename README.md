@@ -70,11 +70,12 @@
 
 PostgreSQL에 다음 데이터를 저장합니다.
 
-| 데이터 | 설명 |
+| 테이블 | 설명 |
 | --- | --- |
-| 처리한 이슈 | 중복 처리를 막기 위한 완료 이력 |
-| 처리할 이슈 | 폴링으로 수집된, 아직 처리되지 않은 이슈 큐 |
-| 프롬프트 변경 이력 | 프롬프트의 버전 이력. 가장 최신 프롬프트를 Paseo에 전달할 프롬프트로 사용 |
+| `issue` | 폴링으로 수집한 이슈의 큐이자 처리 이력. 처리가 끝나도 행을 지우지 않고 결과를 덮어써, 같은 행이 중복 처리도 막는다 |
+| `prompt_version` | 프롬프트의 버전 이력. 가장 최신 프롬프트를 Paseo에 전달할 프롬프트로 사용 |
+
+스키마와 수명주기는 [docs/data-model.md](docs/data-model.md)에 정리되어 있습니다.
 
 ## 저장소 구조
 
@@ -85,10 +86,25 @@ PostgreSQL에 다음 데이터를 저장합니다.
 │   ├── src/issues/         # 이슈 소스 인터페이스·구현체·수집기
 │   ├── src/paseo/          # Paseo 연결, 에이전트 러너 인터페이스·구현체·팩토리
 │   └── test/
+├── docs/                   # 설계 문서 (아키텍처, 데이터 모델, 흐름, 결정 기록)
+├── reports/                # SDD 작업 산출물 (작업 시점 스냅샷)
 ├── Dockerfile              # 앱 이미지 (build context는 저장소 루트)
 ├── docker-compose.yml      # app + paseo + postgres
 └── .env.example            # 환경변수 템플릿 (.env는 저장소 루트에 둔다)
 ```
+
+## 문서
+
+이 README는 설치·실행·운영을 다룹니다. 내부 설계는 [`docs/`](docs/README.md)에 있습니다.
+
+| 문서 | 내용 |
+| --- | --- |
+| [docs/architecture.md](docs/architecture.md) | 시스템 구성, 모듈 구조와 의존 방향, 확장 지점, 오류 모델, 종료 정책 |
+| [docs/data-model.md](docs/data-model.md) | `issue`·`prompt_version` 스키마, 데이터 수명주기, 동시성 |
+| [docs/flows.md](docs/flows.md) | 기동·폴링·처리·종료 런타임 흐름 |
+| [docs/decisions.md](docs/decisions.md) | 설계 결정과 대안 비교·근거 |
+| [docs/history.md](docs/history.md) | 작업 이력과 `reports/`를 읽을 때 주의할 점 |
+| [docs/known-issues.md](docs/known-issues.md) | 알려진 제약과 후속 과제 |
 
 ## 실행 매뉴얼
 
