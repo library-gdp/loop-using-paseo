@@ -1,0 +1,49 @@
+===== AT-03 재기동해도 큐와 이력이 남는다 =====
+
+----- DB_SYNCHRONIZE=true -----
+
+$ 프로세스 A: DB_SYNCHRONIZE=true dat001.ts restart-a
+{"level":30,"time":1790951938322,"service":"loop-using-paseo","source":"stub","issue":"101","title":"AT 이슈 101","msg":"이슈를 큐에 추가"}
+{"level":30,"time":1790951938328,"service":"loop-using-paseo","source":"stub","issue":"102","title":"AT 이슈 102","msg":"이슈를 큐에 추가"}
+{"level":30,"time":1790951938339,"service":"loop-using-paseo","count":2,"msg":"대기 중인 이슈 처리 시작"}
+{"level":30,"time":1790951938357,"service":"loop-using-paseo","issue":"101","status":"success","branch":"issue/101","msg":"이슈 처리 완료"}
+RESULT {"phase":"restart-a","pid":3574661,"schema":{"mode":"synchronize"},"collected":{"fetched":2,"enqueued":2},"runnerCalls":["101"]}
+
+$ 재기동 전
+{"id":1,"issueId":"101","status":"done","result":"success","finishedAt":"2026-10-02T14:38:58.352Z"}
+{"id":2,"issueId":"102","status":"pending","result":null,"finishedAt":null}
+(2 rows)
+
+$ 프로세스 B: DB_SYNCHRONIZE=true dat001.ts restart-b
+{"level":30,"time":1790951939849,"service":"loop-using-paseo","count":1,"msg":"대기 중인 이슈 처리 시작"}
+{"level":30,"time":1790951939865,"service":"loop-using-paseo","issue":"102","status":"error","branch":"issue/102","msg":"이슈 처리 완료"}
+RESULT {"phase":"restart-b","pid":3574690,"schema":{"mode":"synchronize"},"recollected":{"fetched":2,"enqueued":0},"runnerCalls":["102"]}
+
+$ 재기동 후
+{"id":1,"issueId":"101","status":"done","result":"success","finishedAt":"2026-10-02T14:38:58.352Z"}
+{"id":2,"issueId":"102","status":"done","result":"failure","finishedAt":"2026-10-02T14:38:59.860Z"}
+(2 rows)
+
+----- DB_SYNCHRONIZE=false -----
+
+$ 프로세스 A: DB_SYNCHRONIZE=false dat001.ts restart-a
+{"level":30,"time":1790951941800,"service":"loop-using-paseo","source":"stub","issue":"101","title":"AT 이슈 101","msg":"이슈를 큐에 추가"}
+{"level":30,"time":1790951941809,"service":"loop-using-paseo","source":"stub","issue":"102","title":"AT 이슈 102","msg":"이슈를 큐에 추가"}
+{"level":30,"time":1790951941820,"service":"loop-using-paseo","count":2,"msg":"대기 중인 이슈 처리 시작"}
+{"level":30,"time":1790951941838,"service":"loop-using-paseo","issue":"101","status":"success","branch":"issue/101","msg":"이슈 처리 완료"}
+RESULT {"phase":"restart-a","pid":3574752,"schema":{"mode":"migration","applied":["Baseline1790000000000"]},"collected":{"fetched":2,"enqueued":2},"runnerCalls":["101"]}
+
+$ 재기동 전
+{"id":1,"issueId":"101","status":"done","result":"success","finishedAt":"2026-10-02T14:39:01.832Z"}
+{"id":2,"issueId":"102","status":"pending","result":null,"finishedAt":null}
+(2 rows)
+
+$ 프로세스 B: DB_SYNCHRONIZE=false dat001.ts restart-b
+{"level":30,"time":1790951943664,"service":"loop-using-paseo","count":1,"msg":"대기 중인 이슈 처리 시작"}
+RESULT {"phase":"restart-b","pid":3574804,"schema":{"mode":"migration","applied":[]},"recollected":{"fetched":2,"enqueued":0},"runnerCalls":["102"]}
+{"level":30,"time":1790951943690,"service":"loop-using-paseo","issue":"102","status":"error","branch":"issue/102","msg":"이슈 처리 완료"}
+
+$ 재기동 후
+{"id":1,"issueId":"101","status":"done","result":"success","finishedAt":"2026-10-02T14:39:01.832Z"}
+{"id":2,"issueId":"102","status":"done","result":"failure","finishedAt":"2026-10-02T14:39:03.684Z"}
+(2 rows)

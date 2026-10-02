@@ -1,0 +1,21 @@
+===== AT-05 자동 동기화가 어긋난 스키마를 엔티티에 맞춘다 =====
+
+$ DROP INDEX "IDX_issue_status"
+DROP
+
+$ issue indexes
+{"indexname":"PK_f80e086c249b9f3f3ff2fd321b7"}
+{"indexname":"UQ_issue_repo_issue_id"}
+(2 rows)
+
+$ DB_SYNCHRONIZE=true timeout 60 node --import tsx src/main.ts > at05-boot.txt 2>&1
+exit=1
+
+$ issue indexes
+{"indexname":"IDX_issue_status"}
+{"indexname":"PK_f80e086c249b9f3f3ff2fd321b7"}
+{"indexname":"UQ_issue_repo_issue_id"}
+(3 rows)
+
+$ grep 'DB 스키마 준비 완료' at05-boot.txt
+{"level":30,"time":1790951952952,"service":"loop-using-paseo","schemaMode":"synchronize","msg":"DB 스키마 준비 완료"}

@@ -1,0 +1,4 @@
+{"level":30,"time":1790951972377,"service":"loop-using-paseo","deployment":"host","database":"127.0.0.1:55432/loop","agent":"claude_code","repository":"library-gdp/loop-using-paseo","baseBranch":"dev","issueSource":"github","pollIntervalMs":10000,"msg":"loop-using-paseo 기동"}
+{"level":30,"time":1790951972524,"service":"loop-using-paseo","schemaMode":"migration","appliedMigrations":["Baseline1790000000000"],"msg":"DB 스키마 준비 완료"}
+{"level":30,"time":1790951972534,"service":"loop-using-paseo","promptVersion":1,"msg":"최신 프롬프트 확인"}
+{"level":30,"time":1790951972536,"service":"loop-using-paseo","url":"ws://127.0.0.1:1/ws","msg":"Paseo 데몬에 연결 중"}

@@ -1,0 +1,20 @@
+===== AT-06 마이그레이션으로 빈 DB의 스키마를 만든다 =====
+
+$ DB_SYNCHRONIZE=false timeout 60 node --import tsx src/main.ts > at06.txt 2>&1
+exit=1
+
+$ tables
+{"tablename":"issue"}
+{"tablename":"migrations"}
+{"tablename":"prompt_version"}
+(3 rows)
+
+$ migrations
+{"id":1,"name":"Baseline1790000000000"}
+(1 rows)
+
+$ grep 'DB 스키마 준비 완료' at06.txt
+{"level":30,"time":1790951955257,"service":"loop-using-paseo","schemaMode":"migration","appliedMigrations":["Baseline1790000000000"],"msg":"DB 스키마 준비 완료"}
+
+$ fatal 로그 메시지 at06.txt
+"message":"prompt_version 이력이 비어 있습니다. README \

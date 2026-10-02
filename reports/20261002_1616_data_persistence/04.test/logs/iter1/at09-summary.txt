@@ -1,0 +1,39 @@
+===== AT-09 자동 동기화로 쓰던 DB를 마이그레이션 방식으로 바꿔도 데이터가 남는다 =====
+
+$ DB_SYNCHRONIZE=true timeout 60 node --import tsx src/main.ts > at09-prepare-boot.txt 2>&1
+exit=1
+
+$ 사전 조건: 수집 + 프롬프트 등록 + 처리 (AT-01·AT-02 절차)
+RESULT {"phase":"collect","schema":{"mode":"synchronize"},"collected":{"fetched":2,"enqueued":2},"source":[{"repository":"library-gdp/loop-using-paseo","issueId":"101","title":"AT 이슈 101","body":"본문 101","url":"https://github.com/library-gdp/loop-using-paseo/issues/101","labels":["automate","bug"],"issueUpdatedAt":"2026-10-01T01:02:03.000Z"},{"repository":"library-gdp/loop-using-paseo","issueId":"102","title":"AT 이슈 102","body":null,"url":"https://github.com/library-gdp/loop-using-paseo/issues/102","labels":[],"issueUpdatedAt":"2026-10-01T04:05:06.000Z"}]}
+INSERT 1
+RESULT {"phase":"drain","schema":{"mode":"synchronize"},"runnerCalls":["101","102"]}
+
+$ tables
+{"tablename":"issue"}
+{"tablename":"prompt_version"}
+(2 rows)
+
+$ DB_SYNCHRONIZE=false timeout 60 node --import tsx src/main.ts > at09.txt 2>&1
+exit=124
+
+$ diff at09-before.txt at09-after.txt
+diff=0
+
+$ 행 수
+3
+
+$ migrations
+{"id":1,"name":"Baseline1790000000000"}
+(1 rows)
+
+$ grep 'DB 스키마 준비 완료' at09.txt
+{"level":30,"time":1790951972524,"service":"loop-using-paseo","schemaMode":"migration","appliedMigrations":["Baseline1790000000000"],"msg":"DB 스키마 준비 완료"}
+
+$ grep -c 'Paseo 데몬에 연결 중' at09.txt
+1
+
+$ fatal 로그 메시지 at09.txt
+(fatal 없음)
+
+$ grep -c 'already exists' at09.txt
+0

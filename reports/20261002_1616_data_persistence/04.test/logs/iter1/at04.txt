@@ -1,0 +1,32 @@
+===== AT-04 자동 동기화로 빈 DB의 스키마를 만든다 =====
+
+$ tables
+(0 rows)
+
+$  timeout 60 node --import tsx src/main.ts > at04-unset.txt 2>&1
+exit=1
+
+$ tables
+{"tablename":"issue"}
+{"tablename":"prompt_version"}
+(2 rows)
+
+$ grep 'DB 스키마 준비 완료' at04-unset.txt
+{"level":30,"time":1790951946821,"service":"loop-using-paseo","schemaMode":"synchronize","msg":"DB 스키마 준비 완료"}
+
+$ fatal 로그 메시지 at04-unset.txt
+"message":"prompt_version 이력이 비어 있습니다. README \
+
+$ DB_SYNCHRONIZE=true timeout 60 node --import tsx src/main.ts > at04-true.txt 2>&1
+exit=1
+
+$ tables
+{"tablename":"issue"}
+{"tablename":"prompt_version"}
+(2 rows)
+
+$ grep 'DB 스키마 준비 완료' at04-true.txt
+{"level":30,"time":1790951949880,"service":"loop-using-paseo","schemaMode":"synchronize","msg":"DB 스키마 준비 완료"}
+
+$ fatal 로그 메시지 at04-true.txt
+"message":"prompt_version 이력이 비어 있습니다. README \

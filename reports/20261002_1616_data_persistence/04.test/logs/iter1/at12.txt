@@ -1,0 +1,22 @@
+===== AT-12 타입체크·린트·빌드 =====
+
+$ npm run typecheck
+
+> loop-using-paseo@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+exit=0
+
+$ npm run lint
+> loop-using-paseo@0.1.0 lint
+> biome check .
+
+Checked 28 files in 46ms. No fixes applied.
+exit=0
+
+$ npm run build
+
+> loop-using-paseo@0.1.0 build
+> tsc -p tsconfig.json
+
+exit=0

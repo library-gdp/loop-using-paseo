@@ -1,0 +1,287 @@
+{
+  "columns": [
+    {
+      "table_name": "issue",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "nextval('issue_id_seq'::regclass)"
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 2,
+      "column_name": "repository",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 3,
+      "column_name": "issueId",
+      "data_type": "character varying",
+      "character_maximum_length": 128,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 4,
+      "column_name": "title",
+      "data_type": "character varying",
+      "character_maximum_length": 512,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 5,
+      "column_name": "body",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 6,
+      "column_name": "url",
+      "data_type": "character varying",
+      "character_maximum_length": 512,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 7,
+      "column_name": "labels",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "''::text"
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 8,
+      "column_name": "status",
+      "data_type": "character varying",
+      "character_maximum_length": 16,
+      "is_nullable": "NO",
+      "column_default": "'pending'::character varying"
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 9,
+      "column_name": "issueUpdatedAt",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 10,
+      "column_name": "result",
+      "data_type": "character varying",
+      "character_maximum_length": 16,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 11,
+      "column_name": "workspaceId",
+      "data_type": "character varying",
+      "character_maximum_length": 128,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 12,
+      "column_name": "agentId",
+      "data_type": "character varying",
+      "character_maximum_length": 128,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 13,
+      "column_name": "branch",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 14,
+      "column_name": "promptVersion",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 15,
+      "column_name": "summary",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 16,
+      "column_name": "error",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 17,
+      "column_name": "startedAt",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 18,
+      "column_name": "finishedAt",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 19,
+      "column_name": "createdAt",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "issue",
+      "ordinal_position": 20,
+      "column_name": "updatedAt",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "prompt_version",
+      "ordinal_position": 1,
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "nextval('prompt_version_id_seq'::regclass)"
+    },
+    {
+      "table_name": "prompt_version",
+      "ordinal_position": 2,
+      "column_name": "version",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "prompt_version",
+      "ordinal_position": 3,
+      "column_name": "content",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "prompt_version",
+      "ordinal_position": 4,
+      "column_name": "description",
+      "data_type": "character varying",
+      "character_maximum_length": 512,
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "prompt_version",
+      "ordinal_position": 5,
+      "column_name": "createdAt",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO",
+      "column_default": "now()"
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "issue",
+      "conname": "PK_f80e086c249b9f3f3ff2fd321b7",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "issue",
+      "conname": "UQ_issue_repo_issue_id",
+      "contype": "u",
+      "definition": "UNIQUE (repository, \"issueId\")"
+    },
+    {
+      "table_name": "prompt_version",
+      "conname": "PK_cb9ff9b4ab70babd62914aa97a5",
+      "contype": "p",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "prompt_version",
+      "conname": "UQ_1c4aebce69bf91205bcd40f50be",
+      "contype": "u",
+      "definition": "UNIQUE (version)"
+    }
+  ],
+  "indexes": [
+    {
+      "tablename": "issue",
+      "indexname": "IDX_issue_status",
+      "indexdef": "CREATE INDEX \"IDX_issue_status\" ON public.issue USING btree (status)"
+    },
+    {
+      "tablename": "issue",
+      "indexname": "PK_f80e086c249b9f3f3ff2fd321b7",
+      "indexdef": "CREATE UNIQUE INDEX \"PK_f80e086c249b9f3f3ff2fd321b7\" ON public.issue USING btree (id)"
+    },
+    {
+      "tablename": "issue",
+      "indexname": "UQ_issue_repo_issue_id",
+      "indexdef": "CREATE UNIQUE INDEX \"UQ_issue_repo_issue_id\" ON public.issue USING btree (repository, \"issueId\")"
+    },
+    {
+      "tablename": "prompt_version",
+      "indexname": "IDX_prompt_version_version",
+      "indexdef": "CREATE INDEX \"IDX_prompt_version_version\" ON public.prompt_version USING btree (version)"
+    },
+    {
+      "tablename": "prompt_version",
+      "indexname": "PK_cb9ff9b4ab70babd62914aa97a5",
+      "indexdef": "CREATE UNIQUE INDEX \"PK_cb9ff9b4ab70babd62914aa97a5\" ON public.prompt_version USING btree (id)"
+    },
+    {
+      "tablename": "prompt_version",
+      "indexname": "UQ_1c4aebce69bf91205bcd40f50be",
+      "indexdef": "CREATE UNIQUE INDEX \"UQ_1c4aebce69bf91205bcd40f50be\" ON public.prompt_version USING btree (version)"
+    }
+  ]
+}
