@@ -25,7 +25,13 @@ async function main(): Promise<void> {
     "loop-using-paseo 기동",
   );
 
-  const dataSource = await initializeDataSource(createDataSource(env));
+  const { dataSource, schema } = await initializeDataSource(createDataSource(env));
+  logger.info(
+    schema.mode === "migration"
+      ? { schemaMode: schema.mode, appliedMigrations: schema.applied }
+      : { schemaMode: schema.mode },
+    "DB 스키마 준비 완료",
+  );
   // 쓸 수 있는 프롬프트가 없으면 Paseo에 연결하기 전에 기동을 멈춘다 (main().catch가 exit 1).
   const prompt = await getLatestPrompt(dataSource);
   logger.info({ promptVersion: prompt.version }, "최신 프롬프트 확인");

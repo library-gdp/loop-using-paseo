@@ -96,6 +96,11 @@ export const envSchema = z.object({
   DB_USERNAME: z.string().min(1),
   DB_PASSWORD: z.string().optional(),
   DB_NAME: z.string().min(1),
+  /**
+   * 참이면 기동 시 엔티티 기준으로 스키마를 자동 동기화한다.
+   * 거짓이면 자동 동기화를 끄고 `src/db/migrations`의 마이그레이션을 적용한다.
+   */
+  DB_SYNCHRONIZE: booleanish.default(true),
 
   // ── Runtime ──────────────────────────────────────────────────────────────
   DEPLOYMENT: lowercased(z.enum(["docker", "host"])).default("docker"),

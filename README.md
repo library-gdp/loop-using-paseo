@@ -82,6 +82,7 @@ PostgreSQL에 다음 데이터를 저장합니다.
 .
 ├── app/                    # TypeScript 데몬 (package.json은 여기에 있다)
 │   ├── src/main.ts         # 진입점
+│   ├── src/db/             # DataSource, 엔티티, 마이그레이션
 │   ├── src/issues/         # 이슈 소스 인터페이스·구현체·수집기
 │   ├── src/paseo/          # Paseo 연결, 에이전트 러너 인터페이스·구현체·팩토리
 │   └── test/
@@ -208,7 +209,7 @@ paseo daemon start --listen 127.0.0.1:6767
 docker compose up -d postgres
 ```
 
-테이블은 기동하면서 엔티티 기준으로 자동으로 만들어집니다.
+테이블은 데몬이 기동하면서 만듭니다. 기본값(`DB_SYNCHRONIZE=true`)에서는 엔티티 기준으로 자동 동기화하고, `DB_SYNCHRONIZE=false`면 마이그레이션을 적용합니다. [DB 스키마 관리](#db-스키마-관리)를 참고하세요.
 
 #### (3) `.env` 수정
 
@@ -279,6 +280,7 @@ journalctl -u loop-using-paseo -f
 
 ```
 loop-using-paseo 기동
+DB 스키마 준비 완료
 최신 프롬프트 확인
 Paseo 데몬에 연결 중
 Paseo 데몬 연결 완료
@@ -354,6 +356,7 @@ Paseo 데몬 연결 완료
 | `DB_USERNAME` | 접속 계정 | **필수** (`.env.example`: `loop`) |
 | `DB_PASSWORD` | 접속 비밀번호. Docker Compose에서는 필수 | (없음) |
 | `DB_NAME` | DB 이름 | **필수** (`.env.example`: `loop`) |
+| `DB_SYNCHRONIZE` | 스키마 관리 방식. 참이면 기동 시 엔티티 기준으로 자동 동기화, 거짓이면 기동 시 마이그레이션 적용. [DB 스키마 관리](#db-스키마-관리) 참고 | `true` |
 
 ### Runtime
 
@@ -373,6 +376,36 @@ Paseo 데몬 연결 완료
 | `ANTHROPIC_API_KEY` | Claude Code 인증 | (없음) |
 | `OPENAI_API_KEY` | Codex 인증 | (없음) |
 | `GIT_AUTHOR_NAME` / `GIT_AUTHOR_EMAIL` | 에이전트 커밋의 작성자 정보 | `loop-using-paseo` / `loop@example.com` |
+
+## DB 스키마 관리
+
+데몬은 기동할 때마다 Paseo에 연결하기 전에 DB 스키마를 맞춥니다. 방식은 `DB_SYNCHRONIZE`로 고르고, Docker Compose와 Host 실행 모두 `.env`에 적으면 됩니다. 어느 방식으로 맞췄는지는 `DB 스키마 준비 완료` 로그의 `schemaMode`에 남습니다.
+
+| `DB_SYNCHRONIZE` | 방식 | 기동할 때 하는 일 |
+| --- | --- | --- |
+| `true` (기본) | 자동 동기화 (`schemaMode: synchronize`) | 엔티티(`app/src/db/entities/`)와 DB를 비교해 테이블·컬럼·인덱스를 만들거나 고칩니다. **엔티티에 없는 컬럼은 지웁니다** |
+| `false` | 마이그레이션 (`schemaMode: migration`) | 자동 동기화를 하지 않습니다. `app/src/db/migrations/`의 마이그레이션 중 아직 적용되지 않은 것을 순서대로 적용하고 `migrations` 테이블에 기록합니다. 이번에 적용한 이름은 로그의 `appliedMigrations`에 남고, 적용할 것이 없으면 빈 배열입니다 |
+
+- 처음 써 보거나 개발할 때는 기본값이 편합니다. 스키마 변경을 코드 리뷰로 통제하고 컬럼이 의도치 않게 지워지는 일을 막으려면 `false`를 씁니다.
+- 마이그레이션은 전체가 한 트랜잭션으로 적용됩니다. 실패하면 아무것도 적용되지 않은 채 `기동 실패` fatal 로그를 남기고 종료 코드 1로 끝납니다. 원인(예: DB 계정에 테이블 생성 권한이 없음)을 고친 뒤 다시 기동하면 됩니다.
+- 마이그레이션 방식에서는 스키마가 엔티티와 어긋나 있어도 데몬이 고치거나 검사하지 않습니다. 스키마는 마이그레이션으로만 바꾸세요.
+
+### 자동 동기화로 쓰던 DB를 마이그레이션 방식으로 바꾸기
+
+1. 최신 코드로 `DB_SYNCHRONIZE=true`인 채 한 번 기동해 스키마를 현재 엔티티에 맞춥니다(이미 최신 코드로 돌고 있었다면 생략).
+2. `.env`를 `DB_SYNCHRONIZE=false`로 바꾸고 다시 기동합니다.
+
+첫 마이그레이션(baseline)은 테이블이 이미 있으면 아무것도 만들지 않고 적용 기록만 남기므로, 이슈 이력과 프롬프트 이력은 그대로 남습니다.
+
+> [!WARNING]
+> 한 DB에서 두 방식을 오가지 마세요. 마이그레이션 방식으로 쓰던 DB를 `DB_SYNCHRONIZE=true`로 기동하면 자동 동기화가 스키마를 엔티티 기준으로 되돌리면서 엔티티에 없는 컬럼을 지웁니다.
+
+### 엔티티를 바꿀 때 (개발자)
+
+엔티티를 바꾸면 같은 변경을 하는 마이그레이션을 함께 추가해야 `DB_SYNCHRONIZE=false`인 배포의 스키마가 따라옵니다.
+
+1. `app/src/db/migrations/`에 `<타임스탬프>-<이름>.ts`를 만들고 `MigrationInterface`를 구현합니다. 타임스탬프(밀리초)는 기존 마이그레이션보다 커야 하고, 클래스의 `name`은 `<이름><타임스탬프>` 형태로 둡니다.
+2. `app/src/db/migrations/index.ts`의 `migrations` 배열 끝에 클래스를 추가합니다.
 
 ## 프롬프트 변경
 
@@ -478,6 +511,7 @@ UPDATE issue SET status = 'pending' WHERE "issueId" = '123';
 | `알 수 없는 자리표시자` 경고 | 최신 프롬프트에 치환되지 않는 `{{...}}`가 있습니다. 오타이거나 제거된 `{{issueNumber}}`/`{{repository}}`입니다. 고친 프롬프트를 더 큰 `version`으로 추가합니다 |
 | `set-paseo_image-in-env` 이미지 pull 실패 | `.env`에 `PASEO_IMAGE`가 없습니다. `WORKER_AGENT`의 CLI가 들어 있는 Paseo 데몬 이미지를 지정합니다 |
 | `.env에 DB_PASSWORD를 설정하세요` | Docker Compose는 `DB_PASSWORD` 없이 postgres를 띄우지 않습니다. `.env`에 값을 넣습니다 |
+| `기동 실패`이고 오류가 `permission denied for schema public` | `DB_SYNCHRONIZE=false`에서 마이그레이션을 적용하지 못했습니다. `DB_USERNAME` 계정에 스키마에 테이블을 만들 권한을 주고 다시 기동합니다. 적용은 한 트랜잭션이라 중간 상태는 남지 않습니다 |
 | DB 접속 실패 (`password authentication failed`) | postgres 볼륨은 **첫 기동 때의** 계정 정보로 초기화됩니다. 나중에 `DB_*`를 바꿨다면 DB 쪽 계정도 바꾸거나, 데이터를 버려도 되면 `docker compose down -v`로 초기화합니다 |
 | 이슈가 `failure`이고 `error`가 `권한 요청으로 중단됨` | `AGENT_PERMISSION_MODE`가 도구 사용을 묻는 모드(`default` 등)입니다. 무인 실행이면 줄을 지워 기본값(`bypassPermissions`/`full-access`)을 쓰거나, 필요한 도구가 허용되는 모드로 바꿉니다 |
 | `error`가 `[workspace] ...` / `[agent] ...` | 접두사가 실패한 단계입니다. `[workspace]`는 worktree 생성(경로·base 브랜치), `[agent]`는 에이전트 세션 생성(provider·모델·인증) 문제입니다 |
