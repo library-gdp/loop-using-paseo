@@ -1,6 +1,6 @@
 ---
 name: sdd-verification-gate
-description: SDD 워크플로우의 7단계(Verification Gate). REVIEW.md를 바탕으로 인수 조건 기준 합격 여부를 판정해 통과, 재시도(Implementation부터 새 iteration), 최대 3회 iteration 초과 통과 중 하나를 결정하고 reports/<작업 디렉토리>/06.verification_gate/EVALUATION.md에 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 검증 게이트만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 7단계(Verification Gate). REVIEW.md를 바탕으로 인수 조건 기준 합격 여부를 판정해 통과, 재시도(Implementation부터 새 iteration), 최대 3회 iteration 초과 통과 중 하나를 결정하고 runs/<작업 디렉토리>/06.verification_gate/EVALUATION.md에 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 검증 게이트만 따로 요청할 때 사용한다.
 ---
 
 # 7. Verification Gate

@@ -1,6 +1,6 @@
 ---
 name: sdd-review
-description: SDD 워크플로우의 6단계(Review). 모든 인수 조건이 충족되었는지, 모든 인수 테스트가 통과했는지, 작업이 워크플로우 규칙에 맞게 수행되었는지 코드·산출물·테스트 결과를 대조해 검토하고 reports/<작업 디렉토리>/05.review/REVIEW.md에 iteration별로 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 리뷰 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 6단계(Review). 모든 인수 조건이 충족되었는지, 모든 인수 테스트가 통과했는지, 작업이 워크플로우 규칙에 맞게 수행되었는지 코드·산출물·테스트 결과를 대조해 검토하고 runs/<작업 디렉토리>/05.review/REVIEW.md에 iteration별로 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 리뷰 단계만 따로 요청할 때 사용한다.
 ---
 
 # 6. Review
@@ -26,8 +26,9 @@ description: SDD 워크플로우의 6단계(Review). 모든 인수 조건이 충
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" review <N> start
    ```
 2. 검토 대상을 모아라.
-   - `EXPLORE.md`의 기준 커밋을 `<base>`로 두고, `git diff <base> -- . ':!reports'`와 `git status --short`(추적되지 않은 새 파일 포함)로 코드 변경 전체를 확인하라.
-   - `ACCEPTANCE_CRITERIA.md`, `ACCEPTANCE_TEST_PLAN.md`, `PLAN.md`, Architecture 문서, `TEST_REPORT.md`의 `## Iteration N` 섹션을 읽어라.
+   - `EXPLORE.md`의 기준 커밋을 `<base>`로 두고, `git diff <base> -- . ':!runs'`와 `git status --short`(추적되지 않은 새 파일 포함)로 코드와 중앙 문서(`docs/`) 변경 전체를 확인하라.
+   - 이번 작업 디렉토리 밖의 `runs/` 기록이 변경되지 않았는지 확인하라: `git diff <base> --stat -- runs ":!$TASK_DIR"`의 출력이 비어 있어야 한다.
+   - `ACCEPTANCE_CRITERIA.md`, `ACCEPTANCE_TEST_PLAN.md`, `PLAN.md`("중앙 문서 최신화" 절 포함), Architecture 문서, `TEST_REPORT.md`의 `## Iteration N` 섹션을 읽어라.
 3. **인수 조건 충족 검토**: AC마다 코드와 테스트 증거를 대조해 **충족 / 미충족 / 판단 불가**를 판정하라. 테스트가 통과했더라도 테스트가 AC를 제대로 검증하지 못했으면 그 점을 지적하라.
 4. **인수 테스트 검토**
    - 계획된 AT가 모두 수행되었는지, 판정마다 증거가 있는지, 증거가 판정을 뒷받침하는지 확인하라.
@@ -38,6 +39,9 @@ description: SDD 워크플로우의 6단계(Review). 모든 인수 조건이 충
    - [ ] `PLAN.md`의 단위 작업이 모두 수행되었다 (iteration 2 이상이면 직전 피드백이 모두 반영되었다).
    - [ ] 구현이 Architecture 문서와 일치하고, 달라진 부분은 문서와 "변경 이력"에 반영되었다.
    - [ ] 단위 테스트·통합 테스트가 새로 작성되거나 수행되지 않았다.
+   - [ ] `PLAN.md`의 "중앙 문서 최신화"에 계획된 `docs/` 문서가 모두 갱신되었고, 내용이 구현된 코드와 일치한다. 계획에 없던 중앙 문서가 임의로 추가되지 않았다.
+   - [ ] 중앙 문서가 프로젝트의 현재 상태를 서술하고 있다(작업 이력 서술이 섞여 있지 않다).
+   - [ ] 이번 작업 디렉토리 밖의 `runs/` 기록이 수정되지 않았다.
    - [ ] `CLAUDE.md`의 제약(예: Host OS·Docker 두 배포 경로 지원)을 지켰다.
    - [ ] 단계별 산출물이 정해진 디렉토리와 파일 이름으로 존재한다. 작업 디렉토리 이름이 `<YYYYMMDD>_<HHMM>_<작업이름>` 형식이고 80자 이하다.
    - [ ] UI가 없으면 `04.test/evidence/`가 없고, UI가 있으면 스크린샷이 있다.
