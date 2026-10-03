@@ -1,6 +1,6 @@
 ---
 name: sdd-verification-gate
-description: SDD 워크플로우의 7단계(Verification Gate). REVIEW.md를 바탕으로 인수 조건 기준 합격 여부를 판정해 통과, 재시도(Implementation부터 새 iteration), 최대 3회 iteration 초과 통과 중 하나를 결정하고 runs/<작업 디렉토리>/06.verification_gate/EVALUATION.md에 기록한다. sdd-workflow가 호출하거나, 사용자가 SDD 검증 게이트만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 7단계(Verification Gate). REVIEW.md를 바탕으로 인수 조건 기준 합격 여부를 판정해 통과, 재시도(Implementation부터 새 iteration), 최대 3회 iteration 초과 통과 중 하나를 결정하고 runs/<작업 디렉토리>/06.verification_gate/EVALUATION.md에 기록한다. 통과하면 Documentation 단계로 넘어간다. sdd-workflow가 호출하거나, 사용자가 SDD 검증 게이트만 따로 요청할 때 사용한다.
 ---
 
 # 7. Verification Gate
@@ -34,9 +34,9 @@ Review 결과를 바탕으로 작업 결과를 인수 조건 기준으로 검증
    ```
 2. 입력 문서를 읽어라. Review의 판정을 그대로 믿지 말고, 판정 근거가 약한 AC는 코드와 테스트 증거를 직접 확인해 판단하라. Review와 다르게 판단했으면 그 이유를 기록하라.
 3. 판정 기준으로 합격 여부를 정하고, 다음 중 하나로 결론을 내려라.
-   - **통과**: 합격. Report 단계로 넘어간다.
+   - **통과**: 합격. Documentation 단계로 넘어간다.
    - **재시도**: 불합격이고 N < 3. iteration N+1을 Implementation부터 시작한다.
-   - **최대 iteration 초과 통과**: 불합격이고 N = 3. 더 반복하지 않고 Report 단계로 넘어가며, 미충족 AC를 Report와 PR에 명시한다.
+   - **최대 iteration 초과 통과**: 불합격이고 N = 3. 더 반복하지 않고 Documentation 단계로 넘어가며, 미충족 AC를 Report와 PR에 명시한다. 미충족 AC에 해당하는 내용은 중앙 문서에 반영하지 않는다.
 4. **재시도**이면 다음 iteration의 Implementation이 바로 작업할 수 있도록 피드백을 작성하라. 피드백 항목마다 관련 AC·발견 사항 ID, 문제, 원인, 수정 방향, 관련 파일을 적고, 우선순위대로 나열하라. 인수 조건 밖의 작업을 요구하지 마라.
 5. `$TASK_DIR/06.verification_gate/EVALUATION.md`를 갱신하라.
    - 파일이 없으면 템플릿의 머리말부터 만든다.
@@ -46,7 +46,7 @@ Review 결과를 바탕으로 작업 결과를 인수 조건 기준으로 검증
    ```bash
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" verification_gate <N> end
    ```
-7. 사용자에게 판정 결과, 미충족 AC, 다음 행동(Report 진행 또는 iteration N+1 시작)을 보고하라. `sdd-workflow`에서 호출되었으면 판정에 따라 다음 단계로 진행한다.
+7. 사용자에게 판정 결과, 미충족 AC, 다음 행동(Documentation 진행 또는 iteration N+1 시작)을 보고하라. `sdd-workflow`에서 호출되었으면 판정에 따라 다음 단계로 진행한다.
 
 ## EVALUATION.md 템플릿
 

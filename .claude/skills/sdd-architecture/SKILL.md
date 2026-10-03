@@ -12,7 +12,7 @@ description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 �
 ## 입력
 
 - `$TASK_DIR/00.explore/EXPLORE.md`
-- `$TASK_DIR/01.plan/PLAN.md`("중앙 문서 최신화" 절 포함), `ACCEPTANCE_CRITERIA.md`
+- `$TASK_DIR/01.plan/PLAN.md`, `ACCEPTANCE_CRITERIA.md`
 - `docs/` 아래 이번 작업과 관련된 중앙 문서 (있으면 현재 아키텍처의 기준으로 읽는다)
 
 ## 절차
@@ -36,7 +36,7 @@ description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 �
 
 ## 중앙 문서와의 관계
 
-이 단계의 세 문서는 `runs/` 아래에 남는 **이번 작업의 기록**이다. 프로젝트 전체의 현재 아키텍처를 설명하는 중앙 문서가 `docs/`에 있으면 기준으로 읽되 이 단계에서 고치지 마라. 중앙 문서 최신화는 `PLAN.md`의 "중앙 문서 최신화" 계획에 따라 Implementation 단계에서 수행한다.
+이 단계의 세 문서는 `runs/` 아래에 남는 **이번 작업의 기록**이다. 프로젝트 전체의 현재 아키텍처를 설명하는 중앙 문서가 `docs/`에 있으면 기준으로 읽되 이 단계에서 고치지 마라. 중앙 문서 최신화는 `PLAN.md`의 "중앙 문서 최신화" 계획에 따라 Verification Gate 통과 후 Documentation 단계(`sdd-documentation`)가 수행한다.
 
 ## 구현 중 아키텍처 수정
 

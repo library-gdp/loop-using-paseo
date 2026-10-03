@@ -1,10 +1,10 @@
 ---
 name: sdd-workflow
-description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스펙 기반 개발, "워크플로우로 작업해줘"를 요청하거나 기능 구현·리팩터링·버그 수정 같은 개발 작업을 단계별 산출물과 함께 수행하라고 요청할 때 사용한다. Explore → Plan → Architecture → Implementation → Test → Review → Verification Gate → Report 순서로 단계 스킬을 호출하고, runs/ 아래에 작업 기록을 남기고 docs/ 아래 중앙 문서를 최신화한다. SDD 워크플로우에 대한 직접적인 요청이 없다면 이 스킬을 호출하지 않는다.
+description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스펙 기반 개발, "워크플로우로 작업해줘"를 요청하거나 기능 구현·리팩터링·버그 수정 같은 개발 작업을 단계별 산출물과 함께 수행하라고 요청할 때 사용한다. Explore → Plan → Architecture → Implementation → Test → Review → Verification Gate → Documentation → Report 순서로 단계 스킬을 호출하고, runs/ 아래에 작업 기록을 남기고 docs/ 아래 중앙 문서를 최신화한다. SDD 워크플로우에 대한 직접적인 요청이 없다면 이 스킬을 호출하지 않는다.
 ---
 # Spec Driven Development 워크플로우
 
-개발 작업을 8개 단계로 나누어 수행하고, 단계마다 산출물을 `runs/<작업 디렉토리>/` 아래에 남겨라. 개발자는 산출물만 읽고도 작업이 어떤 방향으로 진행되는지 파악할 수 있어야 한다. 작업으로 프로젝트의 사실이 달라지면 `docs/` 아래의 중앙 문서도 함께 최신화한다.
+개발 작업을 9개 단계로 나누어 수행하고, 단계마다 산출물을 `runs/<작업 디렉토리>/` 아래에 남겨라. 개발자는 산출물만 읽고도 작업이 어떤 방향으로 진행되는지 파악할 수 있어야 한다. 검증이 끝난 뒤에는 검증된 형상을 `docs/` 아래의 중앙 문서에 반영한다.
 
 ## 단계와 스킬
 
@@ -18,10 +18,11 @@ description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스
 | 5   | Test               | `sdd-test`              | `04.test/`              | `TEST_REPORT.md`, `evidence/` (UI가 있을 때만)                           |
 | 6   | Review             | `sdd-review`            | `05.review/`            | `REVIEW.md`                                                         |
 | 7   | Verification Gate  | `sdd-verification-gate` | `06.verification_gate/` | `EVALUATION.md`                                                     |
-| 8   | Report             | `sdd-report`            | 작업 디렉토리 루트           | `REPORT.md`, push, PR                                               |
+| 8   | Documentation      | `sdd-documentation`     | `07.documentation/`     | `DOCUMENTATION.md`, `docs/` 중앙 문서 최신화                               |
+| 9   | Report             | `sdd-report`            | 작업 디렉토리 루트           | `REPORT.md`, push, PR                                               |
 
 
-"산출물 위치"는 작업 디렉토리(`$TASK_DIR`) 기준 상대 경로다. Implementation 단계는 이와 별도로 작업 디렉토리 밖의 `docs/` 아래 중앙 문서를 최신화한다.
+"산출물 위치"는 작업 디렉토리(`$TASK_DIR`) 기준 상대 경로다. Documentation 단계는 이와 별도로 작업 디렉토리 밖의 `docs/` 아래 중앙 문서를 최신화한다.
 
 각 단계는 반드시 해당 스킬을 Skill 도구로 호출해 그 절차를 따르라. 단계를 건너뛰거나 순서를 바꾸지 마라.
 
@@ -34,7 +35,7 @@ description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스
   - `<작업이름>`은 작업 내용을 나타내는 영문 소문자·숫자·밑줄(`[a-z0-9_]`)로 짓는다.
   - 날짜·시간은 워크플로우 시작 시점의 로컬 시각이다. `date +%Y%m%d_%H%M`으로 얻어라.
   - 전체 이름은 80자 이하여야 한다. 날짜·시간 접두사가 14자이므로 `<작업이름>`은 66자 이하로 짓는다.
-- 단계 디렉토리 이름은 `<두 자리 번호>.<단계 이름>` 형식이다. 번호는 `00`부터 단계 순서대로 붙인다: `00.explore`, `01.plan`, `02.architecture`, `03.implementation`, `04.test`, `05.review`, `06.verification_gate`. 번호 없는 이름(예: `explore/`)으로 디렉토리를 만들지 마라. Report 단계는 디렉토리를 만들지 않고 작업 디렉토리 루트에 `REPORT.md`를 둔다.
+- 단계 디렉토리 이름은 `<두 자리 번호>.<단계 이름>` 형식이다. 번호는 `00`부터 단계 순서대로 붙인다: `00.explore`, `01.plan`, `02.architecture`, `03.implementation`, `04.test`, `05.review`, `06.verification_gate`, `07.documentation`. 번호 없는 이름(예: `explore/`)으로 디렉토리를 만들지 마라. Report 단계는 디렉토리를 만들지 않고 작업 디렉토리 루트에 `REPORT.md`를 둔다.
 - 디렉토리 번호는 경로에만 쓴다. 타임라인의 `<stage>` 값에는 번호를 붙이지 않는다.
 - 이하 문서에서 `$TASK_DIR`은 `runs/<작업 디렉토리>`(워크스페이스 루트 기준 상대 경로)를 가리킨다.
 
@@ -50,7 +51,8 @@ description: 사용자가 Spec Driven Development(SDD), SDD 워크플로우, 스
   - 워크스페이스 루트의 `docs/` 아래에 두고 SCM(git)으로 버전을 관리한다.
   - 대부분 마크다운이고, 필요하면 다른 형식의 문서도 둘 수 있다.
   - Notion은 더 이상 중앙 문서 저장소로 쓰지 않는다. 중앙 문서를 Notion에서 찾거나 Notion에 쓰지 마라.
-  - 작업으로 프로젝트의 사실이 달라지면 그 변경을 중앙 문서에 반영한다. 이 최신화는 Plan 단계에서 단위 작업으로 계획하고(`sdd-plan`), Implementation 단계에서 코드와 함께 수행한다(`sdd-implementation`).
+  - 작업으로 프로젝트의 사실이 달라지면 그 변경을 중앙 문서에 반영한다. 이 최신화는 Plan 단계에서 대상을 계획하고(`sdd-plan`), 검증이 끝난 뒤 Documentation 단계에서 수행한다(`sdd-documentation`). 검증된 형상만 문서에 반영하기 위해 Verification Gate 뒤에 둔다.
+  - **이미 있는 문서만 최신화한다. 없는 문서를 새로 만들지 마라.** 새 중앙 문서가 필요해 보이면 만들지 말고 Report의 후속 제안으로 남긴다.
 
 어디에 쓸지는 이렇게 판단하라: "이번 작업에서 무엇을 어떻게 했는가"는 `runs/`에, "프로젝트가 지금 어떻게 되어 있는가"는 `docs/`에 쓴다.
 
@@ -63,7 +65,7 @@ node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" <stage> <
 node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" <stage> <iteration|-> end
 ```
 
-- `<stage>`: `explore`, `plan`, `architecture`, `implementation`, `test`, `review`, `verification_gate`, `report`
+- `<stage>`: `explore`, `plan`, `architecture`, `implementation`, `test`, `review`, `verification_gate`, `documentation`, `report`
 - `<iteration>`: Implementation~~Verification Gate 단계는 현재 iteration 번호(1~~3), 나머지 단계는 `-`
 - 기록은 `$TASK_DIR/.timeline.tsv`에 쌓인다. 이 파일을 손으로 고치지 마라.
 
@@ -113,7 +115,11 @@ iteration 번호 N을 1로 두고 다음을 반복하라.
   - 판정이 **재시도**면 N을 1 늘려 1번으로 돌아간다.
   - 판정이 **최대 iteration 초과 통과**면 반복을 끝낸다.
 
-### 8. 보고
+### 8. 중앙 문서 최신화
+
+Verification Gate를 통과한 뒤 `sdd-documentation`을 호출하라. 검증된 형상을 `docs/` 아래 기존 중앙 문서에 반영한다. 없는 문서를 새로 만들지는 않는다.
+
+### 9. 보고
 
 `sdd-report`를 호출하라.
 
