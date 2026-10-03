@@ -1,6 +1,6 @@
 ---
 name: sdd-architecture
-description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 따를 소프트웨어 아키텍처, 데이터 아키텍처, mermaid 플로우차트를 대안 비교와 선택 근거와 함께 reports/<작업 디렉토리>/02.architecture/에 작성한다. sdd-workflow가 호출하거나, 구현 중 아키텍처 산출물을 수정해야 할 때, 사용자가 SDD 아키텍처 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 따를 소프트웨어 아키텍처, 데이터 아키텍처, mermaid 플로우차트를 대안 비교와 선택 근거와 함께 runs/<작업 디렉토리>/02.architecture/에 작성한다. sdd-workflow가 호출하거나, 구현 중 아키텍처 산출물을 수정해야 할 때, 사용자가 SDD 아키텍처 단계만 따로 요청할 때 사용한다.
 ---
 
 # 3. Architecture
@@ -13,6 +13,7 @@ description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 �
 
 - `$TASK_DIR/00.explore/EXPLORE.md`
 - `$TASK_DIR/01.plan/PLAN.md`, `ACCEPTANCE_CRITERIA.md`
+- `docs/` 아래 이번 작업과 관련된 중앙 문서 (있으면 현재 아키텍처의 기준으로 읽는다)
 
 ## 절차
 
@@ -33,9 +34,13 @@ description: SDD 워크플로우의 3단계(Architecture). 계획한 형상이 �
    ```
 7. 사용자에게 산출물 경로와 영역별 주요 결정을 한 줄씩 보고하라.
 
+## 중앙 문서와의 관계
+
+이 단계의 세 문서는 `runs/` 아래에 남는 **이번 작업의 기록**이다. 프로젝트 전체의 현재 아키텍처를 설명하는 중앙 문서가 `docs/`에 있으면 기준으로 읽되 이 단계에서 고치지 마라. 중앙 문서 최신화는 `PLAN.md`의 "중앙 문서 최신화" 계획에 따라 Verification Gate 통과 후 Documentation 단계(`sdd-documentation`)가 수행한다.
+
 ## 구현 중 아키텍처 수정
 
-Implementation 단계에서 아키텍처를 바꿔야 할 때 이 스킬의 문서를 수정한다.
+Implementation 단계에서 아키텍처를 바꿔야 할 때 이 스킬의 문서를 수정한다. 이 수정은 **진행 중인 작업의 문서에만** 해당한다. 끝난 작업의 `runs/` 기록은 고치지 않는다.
 
 - 해당 문서의 본문을 새 결정에 맞게 고치고, 문서 끝 "변경 이력"에 날짜, iteration, 바뀐 내용, 이유를 추가하라.
 - `ACCEPTANCE_CRITERIA.md`는 어떤 경우에도 수정하지 않는다. 아키텍처 변경이 인수 조건을 충족할 수 없게 만든다면 변경하지 말고 사용자에게 알려라.

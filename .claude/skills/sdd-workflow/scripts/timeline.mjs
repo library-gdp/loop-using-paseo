@@ -20,6 +20,7 @@ const STAGES = [
 	"test",
 	"review",
 	"verification_gate",
+	"documentation",
 	"report",
 ];
 const OUTSIDE = "(단계 외)";

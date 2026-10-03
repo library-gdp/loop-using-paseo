@@ -1,6 +1,6 @@
 ---
 name: sdd-test
-description: SDD 워크플로우의 5단계(Test). ACCEPTANCE_TEST_PLAN.md에 정의된 인수 테스트를 그대로 수행하고 결과를 reports/<작업 디렉토리>/04.test/TEST_REPORT.md에 iteration별로 기록한다. UI가 있으면 스크린샷을 04.test/evidence/에 남긴다. 단위·통합 테스트는 수행하지 않는다. sdd-workflow가 호출하거나, 사용자가 SDD 테스트 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 5단계(Test). ACCEPTANCE_TEST_PLAN.md에 정의된 인수 테스트를 그대로 수행하고 결과를 runs/<작업 디렉토리>/04.test/TEST_REPORT.md에 iteration별로 기록한다. UI가 있으면 스크린샷을 04.test/evidence/에 남긴다. 단위·통합 테스트는 수행하지 않는다. sdd-workflow가 호출하거나, 사용자가 SDD 테스트 단계만 따로 요청할 때 사용한다.
 ---
 
 # 5. Test
@@ -22,7 +22,7 @@ Implementation 단계에서 구현한 형상을 인수 테스트로 검증하라
    node .claude/skills/sdd-workflow/scripts/timeline.mjs mark "$TASK_DIR" test <N> start
    ```
 2. `ACCEPTANCE_TEST_PLAN.md`의 테스트 환경을 준비하라(빌드, 필요한 서비스 기동, 환경변수 설정). 준비 과정도 기록하라.
-3. 테스트 케이스(AT-xx)를 계획에 적힌 순서와 절차대로 모두 수행하라.
+3. 테스트 케이스(AT-xx)를 계획에 적힌 순서와 절차대로 모두 수행하라. 이 단계에서는 코드도 문서도 고치지 않는다.
    - 절차를 임의로 바꾸거나 건너뛰지 마라. 환경 문제로 계획대로 수행할 수 없으면 해당 케이스를 "차단"으로 기록하고 이유를 적어라.
    - 기대 결과와 실제 결과를 비교해 케이스마다 **통과 / 실패 / 차단** 중 하나로 판정하라.
    - 실패하면 재현 절차와 관찰한 현상(오류 메시지, 로그, 출력)을 기록하라. 이 단계에서 코드를 고치지 마라. 수정은 다음 iteration의 Implementation에서 한다.
