@@ -1,0 +1,58 @@
+===== AT-11 Docker 런타임과 같은 산출물로 마이그레이션이 적용된다 =====
+
+$ Dockerfile 단계 재현 (deps → build → prod-deps → runtime)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+> loop-using-paseo@0.1.0 build
+> tsc -p tsconfig.json
+
+build exit=0
+
+found 0 vulnerabilities
+
+$ ls rt
+dist
+node_modules
+package.json
+
+$ ls rt/dist/db/migrations
+1790000000000-baseline.js
+1790000000000-baseline.js.map
+index.js
+index.js.map
+
+$ ls rt/node_modules/.bin | grep -c -E '^(tsx|tsc)$'
+0
+
+$ DB_SYNCHRONIZE=false NODE_ENV=production timeout 60 node dist/main.js > at11.txt 2>&1
+exit=1
+
+$ tables
+{"tablename":"issue"}
+{"tablename":"migrations"}
+{"tablename":"prompt_version"}
+(3 rows)
+
+$ migrations
+{"id":1,"name":"Baseline1790000000000"}
+(1 rows)
+
+$ grep 'DB 스키마 준비 완료' at11.txt
+{"level":30,"time":1790952049302,"service":"loop-using-paseo","schemaMode":"migration","appliedMigrations":["Baseline1790000000000"],"msg":"DB 스키마 준비 완료"}
+
+$ fatal 로그 메시지 at11.txt
+"message":"prompt_version 이력이 비어 있습니다. README \
+
+$ docker compose --env-file .env config (app.environment)
+{"DB_SYNCHRONIZE":"false","DB_HOST":"postgres","DEPLOYMENT":"docker"}
+exit=0
+
+$ git diff b89c1770f99b0b848a34c577d320a637c4aa1a1a -- app/src | grep -n 'DEPLOYMENT'
+16:   DEPLOYMENT: lowercased(z.enum(["docker", "host"])).default("docker"),
+grep exit=0
+
+$ (보조) 추가·삭제된 줄만: git diff b89c1770f99b0b848a34c577d320a637c4aa1a1a -- app/src | grep -n '^[+-].*DEPLOYMENT'
+grep exit=1
+
+$ git diff --stat b89c1770f99b0b848a34c577d320a637c4aa1a1a -- Dockerfile docker-compose.yml
+(출력 없음 = 변경 없음)

@@ -1,0 +1,30 @@
+===== AT-08 두 방식의 스키마가 같고 엔티티와 어긋나지 않는다 =====
+
+$ DB_SYNCHRONIZE=true timeout 60 node --import tsx src/main.ts > at08-sync-boot.txt 2>&1
+exit=1
+
+$ DB_SYNCHRONIZE=false timeout 60 node --import tsx src/main.ts > at08-migration-boot.txt 2>&1
+exit=1
+
+$ diff at08-sync.json at08-migration.json
+diff=0
+
+$ 컬럼 수
+{"table_name":"issue","count":"20"}
+{"table_name":"prompt_version","count":"5"}
+(2 rows)
+
+$ 제약·인덱스 이름
+"conname": "PK_f80e086c249b9f3f3ff2fd321b7"
+"conname": "UQ_issue_repo_issue_id"
+"conname": "PK_cb9ff9b4ab70babd62914aa97a5"
+"conname": "UQ_1c4aebce69bf91205bcd40f50be"
+"indexname": "IDX_issue_status"
+"indexname": "PK_f80e086c249b9f3f3ff2fd321b7"
+"indexname": "UQ_issue_repo_issue_id"
+"indexname": "IDX_prompt_version_version"
+"indexname": "PK_cb9ff9b4ab70babd62914aa97a5"
+"indexname": "UQ_1c4aebce69bf91205bcd40f50be"
+
+$ DB_SYNCHRONIZE=false drift.ts
+RESULT {"pendingQueries":0,"queries":[]}

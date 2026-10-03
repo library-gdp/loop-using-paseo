@@ -1,0 +1,25 @@
+===== AT-10 마이그레이션 적용이 실패하면 기동을 멈춘다 =====
+
+$ 권한 없는 계정
+DO
+{"rolname":"loop_ro","rolsuper":false,"can_create":false}
+(1 rows)
+
+$ DB_USERNAME=loop_ro DB_PASSWORD=ro DB_SYNCHRONIZE=false timeout 60 node --import tsx src/main.ts > at10.txt 2>&1
+exit=1
+
+$ grep -c '"level":60' at10.txt
+1
+
+$ grep -c 'Paseo 데몬에 연결 중' at10.txt
+0
+
+$ grep -c 'DB 스키마 준비 완료' at10.txt
+0
+
+$ fatal 로그 메시지 at10.txt
+"message":"permission denied for schema public
+"message":"permission denied for schema public
+
+$ tables
+(0 rows)

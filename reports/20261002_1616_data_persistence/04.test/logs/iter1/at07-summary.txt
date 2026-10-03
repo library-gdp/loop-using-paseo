@@ -1,0 +1,26 @@
+===== AT-07 마이그레이션 방식은 다시 적용하지 않고 자동 동기화도 하지 않는다 =====
+
+$ 기동 전 migrations
+{"count":"1"}
+(1 rows)
+
+$ DROP INDEX "IDX_issue_status"
+DROP
+
+$ DB_SYNCHRONIZE=false timeout 60 node --import tsx src/main.ts > at07.txt 2>&1
+exit=1
+
+$ 기동 후 migrations
+{"count":"1"}
+(1 rows)
+
+$ issue indexes
+{"indexname":"PK_f80e086c249b9f3f3ff2fd321b7"}
+{"indexname":"UQ_issue_repo_issue_id"}
+(2 rows)
+
+$ grep 'DB 스키마 준비 완료' at07.txt
+{"level":30,"time":1790951958306,"service":"loop-using-paseo","schemaMode":"migration","appliedMigrations":[],"msg":"DB 스키마 준비 완료"}
+
+$ fatal 로그 메시지 at07.txt
+"message":"prompt_version 이력이 비어 있습니다. README \

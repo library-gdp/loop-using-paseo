@@ -1,0 +1,20 @@
+===== AT-02 처리 결과가 같은 행에 이력으로 남는다 =====
+
+$ 프롬프트 등록
+INSERT 1
+
+$ 처리 전
+{"id":1,"issueId":"101","status":"pending"}
+{"id":2,"issueId":"102","status":"pending"}
+(2 rows)
+
+$ dat001.ts drain
+{"level":30,"time":1790951936408,"service":"loop-using-paseo","count":2,"msg":"대기 중인 이슈 처리 시작"}
+{"level":30,"time":1790951936428,"service":"loop-using-paseo","issue":"101","status":"success","branch":"issue/101","msg":"이슈 처리 완료"}
+{"level":30,"time":1790951936439,"service":"loop-using-paseo","issue":"102","status":"error","branch":"issue/102","msg":"이슈 처리 완료"}
+RESULT {"phase":"drain","schema":{"mode":"synchronize"},"runnerCalls":["101","102"]}
+
+$ 처리 후
+{"id":1,"repository":"library-gdp/loop-using-paseo","issueId":"101","title":"AT 이슈 101","body":"본문 101","url":"https://github.com/library-gdp/loop-using-paseo/issues/101","labels":"automate,bug","status":"done","issueUpdatedAt":"2026-10-01T01:02:03.000Z","result":"success","workspaceId":"ws-101","agentId":"agent-101","branch":"issue/101","promptVersion":1,"summary":"done 101","error":null,"startedAt":"2026-10-02T14:38:56.408Z","finishedAt":"2026-10-02T14:38:56.422Z","createdAt":"2026-10-02T14:38:54.443Z","updatedAt":"2026-10-02T14:38:56.424Z"}
+{"id":2,"repository":"library-gdp/loop-using-paseo","issueId":"102","title":"AT 이슈 102","body":null,"url":"https://github.com/library-gdp/loop-using-paseo/issues/102","labels":"","status":"done","issueUpdatedAt":"2026-10-01T04:05:06.000Z","result":"failure","workspaceId":"ws-102","agentId":"agent-102","branch":"issue/102","promptVersion":1,"summary":null,"error":"boom 102","startedAt":"2026-10-02T14:38:56.428Z","finishedAt":"2026-10-02T14:38:56.434Z","createdAt":"2026-10-02T14:38:54.454Z","updatedAt":"2026-10-02T14:38:56.436Z"}
+(2 rows)
