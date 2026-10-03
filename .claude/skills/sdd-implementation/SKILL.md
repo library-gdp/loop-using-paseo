@@ -1,11 +1,11 @@
 ---
 name: sdd-implementation
-description: SDD 워크플로우의 4단계(Implementation). PLAN.md의 단위 작업을 순서대로 구현하고 인수 조건 밖의 것은 구현하지 않는다. iteration 2 이상에서는 EVALUATION.md의 피드백을 반영한다. 문서 산출물 없이 코드 자체가 산출물이다. 중앙 문서 최신화는 Documentation 단계가 담당한다. sdd-workflow가 호출하거나, 사용자가 SDD 구현 단계만 따로 요청할 때 사용한다.
+description: SDD 워크플로우의 4단계(Implementation). PLAN.md의 단위 작업을 순서대로 구현하고 인수 조건 밖의 것은 구현하지 않는다. iteration 2 이상에서는 EVALUATION.md의 피드백을 반영한다. 문서 산출물 없이 코드 자체가 산출물이다. sdd-workflow가 호출하거나, 사용자가 SDD 구현 단계만 따로 요청할 때 사용한다.
 ---
 
 # 4. Implementation
 
-계획에 따라 실제로 구현하라. 이 단계는 문서를 만들거나 고치지 않는다. 구현된 코드가 산출물이다. `docs/` 아래 중앙 문서 최신화는 검증이 끝난 뒤 Documentation 단계(`sdd-documentation`)가 수행하므로 여기서 손대지 마라.
+계획에 따라 실제로 구현하라.
 
 공통 규칙은 `sdd-workflow` 스킬을 따른다.
 
@@ -30,7 +30,7 @@ description: SDD 워크플로우의 4단계(Implementation). PLAN.md의 단위 �
    - 주변 코드의 구조, 명명, 관용구, 주석 밀도에 맞춰라.
    - 인수 조건에 없는 기능, 설정, 추상화를 추가하지 마라. 필요해 보이면 구현하지 말고 Report에 "후속 제안"으로 남겨라.
    - 단위 작업의 완료 기준을 확인한 뒤 다음 작업으로 넘어가라. 빌드·타입체크가 가능하면 수시로 실행해 깨진 상태로 진행하지 마라.
-   - `docs/` 아래 중앙 문서를 고치지 마라. 검증된 형상을 반영하는 일이므로 Documentation 단계가 한다.
+   - 문서를 만들거나 고치지 마라. `docs/` 아래 중앙 문서 최신화는 Documentation 단계가 담당한다.
    - 끝난 작업의 `runs/` 기록을 고치지 마라. 이번 작업의 `runs/` 산출물도 각 단계 스킬이 정한 방법으로만 바꾼다.
    - 단위 테스트·통합 테스트는 작성하지 않는다.
    - `CLAUDE.md`의 제약(예: Host OS 직접 실행과 Docker 실행을 모두 지원)을 지켜라.
