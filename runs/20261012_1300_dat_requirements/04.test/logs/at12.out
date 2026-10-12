@@ -1,0 +1,9 @@
+===== AT-12 =====
+typecheck exit=0
+lint exit=0
+
+Checked 28 files in 49ms. No fixes applied.
+build exit=0
+test exit=0
+ Test Files  1 passed (1)
+      Tests  6 passed (6)

@@ -1,0 +1,5 @@
+# issue (2 rows)
+{"id":"<set>","repository":"acme/dat-at","issueId":"201","title":"이슈 201 제목","body":"이슈 201 본문","url":"https://example.test/acme/dat-at/issues/201","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:21.000Z","result":"success","workspaceId":"ws-201","agentId":"ag-201","branch":"issue/201","promptVersion":1,"summary":"A 요약","error":null,"startedAt":"<set>","finishedAt":"<set>","createdAt":"<set>","updatedAt":"<set>"}
+{"id":"<set>","repository":"acme/dat-at","issueId":"202","title":"이슈 202 제목","body":"이슈 202 본문","url":"https://example.test/acme/dat-at/issues/202","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:22.000Z","result":"failure","workspaceId":"ws-202","agentId":"ag-202","branch":"issue/202","promptVersion":1,"summary":null,"error":"boom-202","startedAt":"<set>","finishedAt":"<set>","createdAt":"<set>","updatedAt":"<set>"}
+# prompt_version (1 rows)
+{"id":"<set>","version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"<set>"}

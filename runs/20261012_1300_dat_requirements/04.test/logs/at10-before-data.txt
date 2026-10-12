@@ -1,0 +1,5 @@
+# issue (2 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"1001","title":"대기 이슈","body":null,"url":"https://example.test/1001","labels":"","status":"pending","issueUpdatedAt":"2026-10-01T00:00:00.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:20:10.439Z","updatedAt":"2026-10-12T11:20:10.439Z"}
+{"id":2,"repository":"acme/dat-at","issueId":"1002","title":"끝난 이슈","body":"본문","url":"https://example.test/1002","labels":"bug,docs","status":"done","issueUpdatedAt":"2026-10-01T00:00:00.000Z","result":"success","workspaceId":"ws-1002","agentId":"ag-1002","branch":"issue/1002","promptVersion":1,"summary":"요약","error":null,"startedAt":"2026-10-02T00:00:00.000Z","finishedAt":"2026-10-02T00:05:00.000Z","createdAt":"2026-10-12T11:20:10.632Z","updatedAt":"2026-10-12T11:20:10.632Z"}
+# prompt_version (1 rows)
+{"id":1,"version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"2026-10-12T11:20:10.267Z"}

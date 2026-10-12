@@ -1,0 +1,52 @@
+# columns: table.column | type(length) | nullable | default
+issue.agentId | character varying(128) | YES | -
+issue.body | text | YES | -
+issue.branch | character varying(255) | YES | -
+issue.createdAt | timestamp with time zone | NO | now()
+issue.error | text | YES | -
+issue.finishedAt | timestamp with time zone | YES | -
+issue.id | integer | NO | nextval('issue_id_seq'::regclass)
+issue.issueId | character varying(128) | NO | -
+issue.issueUpdatedAt | timestamp with time zone | NO | -
+issue.labels | text | NO | ''::text
+issue.promptVersion | integer | YES | -
+issue.repository | character varying(255) | NO | -
+issue.result | character varying(16) | YES | -
+issue.startedAt | timestamp with time zone | YES | -
+issue.status | character varying(16) | NO | 'pending'::character varying
+issue.summary | text | YES | -
+issue.title | character varying(512) | NO | -
+issue.updatedAt | timestamp with time zone | NO | now()
+issue.url | character varying(512) | NO | -
+issue.workspaceId | character varying(128) | YES | -
+prompt_version.content | text | NO | -
+prompt_version.createdAt | timestamp with time zone | NO | now()
+prompt_version.description | character varying(512) | YES | -
+prompt_version.id | integer | NO | nextval('prompt_version_id_seq'::regclass)
+prompt_version.version | integer | NO | -
+# constraints: table | name | type | definition
+issue | PK_f80e086c249b9f3f3ff2fd321b7 | p | PRIMARY KEY (id)
+issue | UQ_issue_repo_issue_id | u | UNIQUE (repository, "issueId")
+issue | issue_createdAt_not_null | n | NOT NULL "createdAt"
+issue | issue_id_not_null | n | NOT NULL id
+issue | issue_issueId_not_null | n | NOT NULL "issueId"
+issue | issue_issueUpdatedAt_not_null | n | NOT NULL "issueUpdatedAt"
+issue | issue_labels_not_null | n | NOT NULL labels
+issue | issue_repository_not_null | n | NOT NULL repository
+issue | issue_status_not_null | n | NOT NULL status
+issue | issue_title_not_null | n | NOT NULL title
+issue | issue_updatedAt_not_null | n | NOT NULL "updatedAt"
+issue | issue_url_not_null | n | NOT NULL url
+prompt_version | PK_cb9ff9b4ab70babd62914aa97a5 | p | PRIMARY KEY (id)
+prompt_version | UQ_1c4aebce69bf91205bcd40f50be | u | UNIQUE (version)
+prompt_version | prompt_version_content_not_null | n | NOT NULL content
+prompt_version | prompt_version_createdAt_not_null | n | NOT NULL "createdAt"
+prompt_version | prompt_version_id_not_null | n | NOT NULL id
+prompt_version | prompt_version_version_not_null | n | NOT NULL version
+# indexes: table | name | definition
+issue | IDX_issue_status | CREATE INDEX "IDX_issue_status" ON public.issue USING btree (status)
+issue | PK_f80e086c249b9f3f3ff2fd321b7 | CREATE UNIQUE INDEX "PK_f80e086c249b9f3f3ff2fd321b7" ON public.issue USING btree (id)
+issue | UQ_issue_repo_issue_id | CREATE UNIQUE INDEX "UQ_issue_repo_issue_id" ON public.issue USING btree (repository, "issueId")
+prompt_version | IDX_prompt_version_version | CREATE INDEX "IDX_prompt_version_version" ON public.prompt_version USING btree (version)
+prompt_version | PK_cb9ff9b4ab70babd62914aa97a5 | CREATE UNIQUE INDEX "PK_cb9ff9b4ab70babd62914aa97a5" ON public.prompt_version USING btree (id)
+prompt_version | UQ_1c4aebce69bf91205bcd40f50be | CREATE UNIQUE INDEX "UQ_1c4aebce69bf91205bcd40f50be" ON public.prompt_version USING btree (version)

@@ -1,0 +1,96 @@
+===== AT-11 =====
+[1] (a) Host 경로: AT-04·AT-06은 app/ 에서 npm ci → npm run build 후 아래 boot 함수로 기동했다
+boot () 
+{ 
+    local envfile;
+    envfile="$(mkenv "$1" "$2")";
+    ( cd "$REPO/app" && timeout 20 node --env-file="$envfile" dist/main.js > "$LOGS/$3.boot.txt" 2>&1;
+    echo "exit=$?" )
+}
+[2] (b) Dockerfile 단계 재현 (/tmp/dat-at-image)
+$ npm ci --omit=peer
+added 158 packages, and audited 159 packages in 12s
+$ npm run build
+build exit=0
+$ npm prune --omit=dev --omit=peer
+removed 32 packages, and audited 127 packages in 1s
+$ ls runtime
+dist
+node_modules
+package.json
+$ ls runtime/node_modules | grep -E '^(tsx|typescript|vitest)$'
+grep exit=1
+$ ls runtime/dist/db/migrations
+1791802800000-InitialSchema.js
+1791802800000-InitialSchema.js.map
+index.js
+index.js.map
+$ ls /tmp/dat-at-image
+package-lock.json
+package.json
+runtime
+src
+tsconfig.json
+createdb at11_docker_mig
+createdb at11_docker_unset
+[3] runtime: DB_SYNCHRONIZE=false, DB_NAME=at11_docker_mig
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+"deployment":"docker"
+{"table_name":"issue"}
+{"table_name":"migrations"}
+{"table_name":"prompt_version"}
+(3 rows)
+{"id":1,"timestamp":"1791802800000","name":"InitialSchema1791802800000"}
+(1 rows)
+diff schema-migration.txt at11-docker-mig-schema.txt
+NO DIFF
+[4] runtime: DB_SYNCHRONIZE 미지정, DB_NAME=at11_docker_unset
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+{"table_name":"issue"}
+{"table_name":"prompt_version"}
+(2 rows)
+diff schema-sync.txt at11-docker-unset-schema.txt
+NO DIFF
+[5] (c) docker compose config
+  app:
+    build:
+      context: /tmp/dat-at-compose
+      dockerfile: Dockerfile
+    depends_on:
+      paseo:
+        condition: service_started
+        required: true
+      postgres:
+        condition: service_healthy
+        required: true
+    environment:
+      DB_HOST: postgres
+      DB_NAME: loop
+      DB_PASSWORD: x
+      DB_PORT: "5432"
+      DB_SYNCHRONIZE: "false"
+      DB_USERNAME: loop
+      DEPLOYMENT: docker
+      PASEO_HOST: paseo
+      PASEO_IMAGE: x
+      PASEO_PORT: "6767"
+      PROJECT_PATH: /workspace/target-repo
+    init: true
+[6] (d) DEPLOYMENT 분기 확인
+$ git diff f3d3e8e -- app/src | grep -n DEPLOYMENT
+16:   DEPLOYMENT: lowercased(z.enum(["docker", "host"])).default("docker"),
+grep exit=0
+$ git diff f3d3e8e -- app/src | grep -nE '^[+-].*DEPLOYMENT'  (추가·삭제된 줄만)
+grep exit=1
+$ grep -rn DEPLOYMENT app/src/db  (추적되지 않는 신규 파일 포함)
+grep exit=1
+$ grep -rn DEPLOYMENT app/src
+app/src/config/env.ts:39:/** 값을 소문자로 정규화한 뒤 스키마에 넘긴다 (`DEPLOYMENT=Docker` 같은 표기 흡수). */
+app/src/config/env.ts:106:  DEPLOYMENT: lowercased(z.enum(["docker", "host"])).default("docker"),
+app/src/main.ts:17:      deployment: env.DEPLOYMENT,

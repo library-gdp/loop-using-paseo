@@ -1,0 +1,13 @@
+===== AT-08 =====
+[1] 엔티티에 없는 컬럼 추가
+ALTER
+UPDATE 1
+[2] boot DB_SYNCHRONIZE=false
+exit=124
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":0,"applied":[]}
+level=30 msg="최신 프롬프트 확인" {"promptVersion":1}
+level=30 msg="Paseo 데몬에 연결 중" {}
+[3] 조회
+{"issueId":"701","legacyNote":"keep-me"}
+(1 rows)

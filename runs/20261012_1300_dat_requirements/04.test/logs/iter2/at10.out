@@ -1,0 +1,37 @@
+===== AT-10 =====
+createdb at10_switch
+[1] boot DB_SYNCHRONIZE=true (스키마 생성)
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+[2] 데이터 삽입
+INSERT 1
+INSERT 1
+INSERT 1
+전환 전 테이블
+{"table_name":"issue"}
+{"table_name":"prompt_version"}
+(2 rows)
+[3] before
+# issue (2 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"1001","title":"대기 이슈","body":null,"url":"https://example.test/1001","labels":"","status":"pending","issueUpdatedAt":"2026-10-01T00:00:00.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:37:28.980Z","updatedAt":"2026-10-12T11:37:28.980Z"}
+{"id":2,"repository":"acme/dat-at","issueId":"1002","title":"끝난 이슈","body":"본문","url":"https://example.test/1002","labels":"bug,docs","status":"done","issueUpdatedAt":"2026-10-01T00:00:00.000Z","result":"success","workspaceId":"ws-1002","agentId":"ag-1002","branch":"issue/1002","promptVersion":1,"summary":"요약","error":null,"startedAt":"2026-10-02T00:00:00.000Z","finishedAt":"2026-10-02T00:05:00.000Z","createdAt":"2026-10-12T11:37:29.128Z","updatedAt":"2026-10-12T11:37:29.128Z"}
+# prompt_version (1 rows)
+{"id":1,"version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"2026-10-12T11:37:28.841Z"}
+[4] boot DB_SYNCHRONIZE=false (boot1)
+exit=124
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+level=30 msg="최신 프롬프트 확인" {"promptVersion":1}
+level=30 msg="Paseo 데몬에 연결 중" {}
+error/fatal 로그 수: 0
+[5] after + diff
+schema: NO DIFF
+data: NO DIFF
+{"id":1,"timestamp":"1791802800000","name":"InitialSchema1791802800000"}
+(1 rows)
+[6] boot DB_SYNCHRONIZE=false (boot2)
+exit=124
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":0,"applied":[]}
+level=30 msg="최신 프롬프트 확인" {"promptVersion":1}
+level=30 msg="Paseo 데몬에 연결 중" {}

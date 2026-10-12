@@ -1,0 +1,19 @@
+===== AT-07 =====
+[1] 프롬프트·이슈 삽입
+INSERT 1
+INSERT 1
+[2] before
+# issue (1 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"701","title":"AT-07 이슈","body":null,"url":"https://example.test/701","labels":"","status":"pending","issueUpdatedAt":"2026-10-01T00:00:00.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:19:10.488Z","updatedAt":"2026-10-12T11:19:10.488Z"}
+# prompt_version (1 rows)
+{"id":1,"version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"2026-10-12T11:19:10.324Z"}
+[3] boot DB_SYNCHRONIZE=false
+exit=124
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":0,"applied":[]}
+level=30 msg="최신 프롬프트 확인" {"promptVersion":1}
+level=30 msg="Paseo 데몬에 연결 중" {}
+[4] after + diff
+mig: NO DIFF
+schema: NO DIFF
+data: NO DIFF

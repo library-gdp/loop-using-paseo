@@ -1,0 +1,27 @@
+===== 보충 확인: 마이그레이션 적용 실패 시 동작 (EVALUATION iteration 1 피드백 1의 서술 확인, 계획 외) =====
+createdb extra_fail
+[1] 초기 마이그레이션이 실패하도록 prompt_version이라는 이름의 뷰를 만든다
+CREATE
+[2] boot DB_SYNCHRONIZE=false
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+(non-json) Migration "InitialSchema1791802800000" failed, error: cannot create index on relation "prompt_version"
+level=60 msg="기동 실패" {"err":{"type":"QueryFailedError","message":"cannot create index on relation \"prompt_version\""}}
+[3] 실패 후 테이블
+{"table_name":"migrations","table_type":"BASE TABLE"}
+{"table_name":"prompt_version","table_type":"VIEW"}
+(2 rows)
+{"migrations_rows":"0"}
+(1 rows)
+[4] 원인 제거 후 다시 boot
+DROP
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+{"table_name":"issue","table_type":"BASE TABLE"}
+{"table_name":"migrations","table_type":"BASE TABLE"}
+{"table_name":"prompt_version","table_type":"BASE TABLE"}
+(3 rows)
+{"id":1,"timestamp":"1791802800000","name":"InitialSchema1791802800000"}
+(1 rows)
