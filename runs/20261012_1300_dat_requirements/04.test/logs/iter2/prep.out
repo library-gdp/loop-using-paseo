@@ -1,0 +1,12 @@
+added 172 packages, and audited 173 packages in 12s
+build exit=0
+v24.20.0
+{"version":"PostgreSQL 18.4 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit"}
+(1 rows)
+f3d3e8e
+ M .env.example
+ M README.md
+ M app/src/config/env.ts
+ M app/src/db/data-source.ts
+?? app/src/db/migrations/
+?? runs/20261012_1300_dat_requirements/

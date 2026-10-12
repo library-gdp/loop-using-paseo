@@ -1,0 +1,57 @@
+===== AT-03 =====
+--- at03_sync (DB_SYNCHRONIZE=true)
+createdb at03_sync
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+INSERT 1
+[1] phase1 (프로세스 1)
+COLLECT_1 {"fetched":1,"enqueued":1}
+RUNNER_CALLS ["301"]
+COLLECT_2 {"fetched":3,"enqueued":2}
+PID 875374 dataSource.isInitialized = false
+[2] dump → phase1
+{"issueId":"301","status":"done","result":"success"}
+{"issueId":"302","status":"pending","result":null}
+{"issueId":"303","status":"pending","result":null}
+(3 rows)
+[3] phase2 (프로세스 2)
+PID 875440
+ROWS_AT_CONNECT [{"issueId":"301","status":"done","result":"success","branch":"issue/301","promptVersion":1,"summary":"301 요약","updatedAt":"2026-10-12T11:18:37.683Z"},{"issueId":"302","status":"pending","result":null,"branch":null,"promptVersion":null,"summary":null,"updatedAt":"2026-10-12T11:18:37.694Z"},{"issueId":"303","status":"pending","result":null,"branch":null,"promptVersion":null,"summary":null,"updatedAt":"2026-10-12T11:18:37.704Z"}]
+RECOLLECT {"fetched":3,"enqueued":0}
+RUNNER_CALLS ["302","303"]
+[4] dump → phase2
+{"issueId":"301","status":"done","result":"success"}
+{"issueId":"302","status":"done","result":"success"}
+{"issueId":"303","status":"done","result":"success"}
+(3 rows)
+#301 행 비교 (phase1 vs phase2, 모든 컬럼)
+NO DIFF
+{"id":1,"repository":"acme/dat-at","issueId":"301","title":"이슈 301 제목","body":"이슈 301 본문","url":"https://example.test/acme/dat-at/issues/301","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:01.000Z","result":"success","workspaceId":"ws-301","agentId":"ag-301","branch":"issue/301","promptVersion":1,"summary":"301 요약","error":null,"startedAt":"2026-10-12T11:18:37.654Z","finishedAt":"2026-10-12T11:18:37.678Z","createdAt":"2026-10-12T11:18:37.635Z","updatedAt":"2026-10-12T11:18:37.683Z"}
+--- at03_mig (DB_SYNCHRONIZE=false)
+createdb at03_mig
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+INSERT 1
+[1] phase1 (프로세스 1)
+COLLECT_1 {"fetched":1,"enqueued":1}
+RUNNER_CALLS ["301"]
+COLLECT_2 {"fetched":3,"enqueued":2}
+PID 875537 dataSource.isInitialized = false
+[2] dump → phase1
+{"issueId":"301","status":"done","result":"success"}
+{"issueId":"302","status":"pending","result":null}
+{"issueId":"303","status":"pending","result":null}
+(3 rows)
+[3] phase2 (프로세스 2)
+PID 875595
+ROWS_AT_CONNECT [{"issueId":"301","status":"done","result":"success","branch":"issue/301","promptVersion":1,"summary":"301 요약","updatedAt":"2026-10-12T11:18:41.532Z"},{"issueId":"302","status":"pending","result":null,"branch":null,"promptVersion":null,"summary":null,"updatedAt":"2026-10-12T11:18:41.546Z"},{"issueId":"303","status":"pending","result":null,"branch":null,"promptVersion":null,"summary":null,"updatedAt":"2026-10-12T11:18:41.552Z"}]
+RECOLLECT {"fetched":3,"enqueued":0}
+RUNNER_CALLS ["302","303"]
+[4] dump → phase2
+{"issueId":"301","status":"done","result":"success"}
+{"issueId":"302","status":"done","result":"success"}
+{"issueId":"303","status":"done","result":"success"}
+(3 rows)
+#301 행 비교 (phase1 vs phase2, 모든 컬럼)
+NO DIFF
+{"id":1,"repository":"acme/dat-at","issueId":"301","title":"이슈 301 제목","body":"이슈 301 본문","url":"https://example.test/acme/dat-at/issues/301","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:01.000Z","result":"success","workspaceId":"ws-301","agentId":"ag-301","branch":"issue/301","promptVersion":1,"summary":"301 요약","error":null,"startedAt":"2026-10-12T11:18:41.504Z","finishedAt":"2026-10-12T11:18:41.525Z","createdAt":"2026-10-12T11:18:41.477Z","updatedAt":"2026-10-12T11:18:41.532Z"}

@@ -1,0 +1,9 @@
+{
+  "name": "dat-acceptance-harness",
+  "private": true,
+  "type": "module",
+  "description": "DAT-001/DAT-002 인수 테스트 하네스. app/dist의 프로덕션 모듈을 그대로 불러 쓴다.",
+  "dependencies": {
+    "embedded-postgres": "18.4.0-beta.17"
+  }
+}

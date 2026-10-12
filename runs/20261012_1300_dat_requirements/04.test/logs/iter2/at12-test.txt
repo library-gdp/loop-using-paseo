@@ -1,0 +1,13 @@
+
+> loop-using-paseo@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.0 /home/gdp/.paseo/worktrees/2xh4ho2z/cruel-stingray/app
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  13:38:38
+   Duration  478ms (import 56%, transform 33%, tests 7%, worker 4%)
+

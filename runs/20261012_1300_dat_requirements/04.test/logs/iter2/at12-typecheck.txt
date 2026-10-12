@@ -1,0 +1,4 @@
+
+> loop-using-paseo@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+

@@ -1,0 +1,33 @@
+===== AT-02 =====
+--- at02_sync (DB_SYNCHRONIZE=true)
+createdb at02_sync
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+INSERT 1
+COLLECT {"fetched":2,"enqueued":2}
+RUNNER_CALLS [{"issueId":"201","prompt":"AT #201 이슈 201 제목"},{"issueId":"202","prompt":"AT #202 이슈 202 제목"}]
+# issue (2 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"201","title":"이슈 201 제목","body":"이슈 201 본문","url":"https://example.test/acme/dat-at/issues/201","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:21.000Z","result":"success","workspaceId":"ws-201","agentId":"ag-201","branch":"issue/201","promptVersion":1,"summary":"A 요약","error":null,"startedAt":"2026-10-12T11:18:24.324Z","finishedAt":"2026-10-12T11:18:24.339Z","createdAt":"2026-10-12T11:18:24.299Z","updatedAt":"2026-10-12T11:18:24.341Z"}
+{"id":2,"repository":"acme/dat-at","issueId":"202","title":"이슈 202 제목","body":"이슈 202 본문","url":"https://example.test/acme/dat-at/issues/202","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:22.000Z","result":"failure","workspaceId":"ws-202","agentId":"ag-202","branch":"issue/202","promptVersion":1,"summary":null,"error":"boom-202","startedAt":"2026-10-12T11:18:24.346Z","finishedAt":"2026-10-12T11:18:24.350Z","createdAt":"2026-10-12T11:18:24.312Z","updatedAt":"2026-10-12T11:18:24.351Z"}
+# prompt_version (1 rows)
+{"id":1,"version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"2026-10-12T11:18:23.528Z"}
+{"issueId":"201","started_le_finished":true}
+{"issueId":"202","started_le_finished":true}
+(2 rows)
+--- at02_mig (DB_SYNCHRONIZE=false)
+createdb at02_mig
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+INSERT 1
+COLLECT {"fetched":2,"enqueued":2}
+RUNNER_CALLS [{"issueId":"201","prompt":"AT #201 이슈 201 제목"},{"issueId":"202","prompt":"AT #202 이슈 202 제목"}]
+# issue (2 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"201","title":"이슈 201 제목","body":"이슈 201 본문","url":"https://example.test/acme/dat-at/issues/201","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:21.000Z","result":"success","workspaceId":"ws-201","agentId":"ag-201","branch":"issue/201","promptVersion":1,"summary":"A 요약","error":null,"startedAt":"2026-10-12T11:18:27.299Z","finishedAt":"2026-10-12T11:18:27.315Z","createdAt":"2026-10-12T11:18:27.261Z","updatedAt":"2026-10-12T11:18:27.318Z"}
+{"id":2,"repository":"acme/dat-at","issueId":"202","title":"이슈 202 제목","body":"이슈 202 본문","url":"https://example.test/acme/dat-at/issues/202","labels":"","status":"done","issueUpdatedAt":"2026-10-01T00:00:22.000Z","result":"failure","workspaceId":"ws-202","agentId":"ag-202","branch":"issue/202","promptVersion":1,"summary":null,"error":"boom-202","startedAt":"2026-10-12T11:18:27.323Z","finishedAt":"2026-10-12T11:18:27.332Z","createdAt":"2026-10-12T11:18:27.282Z","updatedAt":"2026-10-12T11:18:27.333Z"}
+# prompt_version (1 rows)
+{"id":1,"version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"2026-10-12T11:18:26.404Z"}
+{"issueId":"201","started_le_finished":true}
+{"issueId":"202","started_le_finished":true}
+(2 rows)
+--- diff stable sync vs mig
+NO DIFF

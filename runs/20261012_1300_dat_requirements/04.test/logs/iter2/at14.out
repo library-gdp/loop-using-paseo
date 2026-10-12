@@ -1,0 +1,5 @@
+===== AT-14 =====
+Notion MVP Requirements 데이터소스(collection://924f666e-9c4a-474c-9e9d-7ae7eb3f7a3d) 읽기 전용 질의, 2026-10-12 13:39
+SELECT "Req ID", "Name", "Requirement", "Done" FROM "collection://924f666e-9c4a-474c-9e9d-7ae7eb3f7a3d" WHERE "Req ID" IN ('DAT-001','DAT-002') ORDER BY "Req ID"
+{"Req ID":"DAT-001","Name":"이슈 큐·이력 저장","Requirement":"시스템은 수집한 이슈의 큐와 처리 이력을 PostgreSQL에 저장할 수 있다","Done":"__NO__"}
+{"Req ID":"DAT-002","Name":"스키마 관리","Requirement":"시스템은 DB_SYNCHRONIZE 또는 마이그레이션으로 DB 스키마를 맞출 수 있다","Done":"__NO__"}

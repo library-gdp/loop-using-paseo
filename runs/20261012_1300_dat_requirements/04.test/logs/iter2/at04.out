@@ -1,0 +1,30 @@
+===== AT-04 =====
+createdb at04_unset
+createdb at04_true
+[1] boot at04_unset (DB_SYNCHRONIZE 미지정) — .env의 DB_SYNCHRONIZE 줄 수: 0
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+[2] boot at04_true (DB_SYNCHRONIZE=true)
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+[3] schema dumps
+issue | UQ_issue_repo_issue_id | u | UNIQUE (repository, "issueId")
+prompt_version | UQ_1c4aebce69bf91205bcd40f50be | u | UNIQUE (version)
+issue | IDX_issue_status | CREATE INDEX "IDX_issue_status" ON public.issue USING btree (status)
+issue | UQ_issue_repo_issue_id | CREATE UNIQUE INDEX "UQ_issue_repo_issue_id" ON public.issue USING btree (repository, "issueId")
+prompt_version | IDX_prompt_version_version | CREATE INDEX "IDX_prompt_version_version" ON public.prompt_version USING btree (version)
+prompt_version | UQ_1c4aebce69bf91205bcd40f50be | CREATE UNIQUE INDEX "UQ_1c4aebce69bf91205bcd40f50be" ON public.prompt_version USING btree (version)
+columns=25 lines=52
+diff schema-sync-unset.txt schema-sync.txt
+NO DIFF
+[4] tables
+{"table_name":"issue"}
+{"table_name":"prompt_version"}
+(2 rows)
+{"table_name":"issue"}
+{"table_name":"prompt_version"}
+(2 rows)

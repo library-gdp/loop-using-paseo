@@ -1,0 +1,33 @@
+===== AT-01 =====
+--- at01_sync (DB_SYNCHRONIZE=true)
+createdb at01_sync
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+{"count":"0"}
+(1 rows)
+SOURCE [{"repository":"acme/dat-at","issueId":"101","title":"이슈 101 제목","body":null,"url":"https://example.test/acme/dat-at/issues/101","labels":[],"issueUpdatedAt":"2026-10-01T00:00:41.000Z"},{"repository":"acme/dat-at","issueId":"102","title":"이슈 102 제목","body":"이슈 102 본문","url":"https://example.test/acme/dat-at/issues/102","labels":["bug","automate"],"issueUpdatedAt":"2026-10-01T00:00:42.000Z"},{"repository":"acme/dat-at","issueId":"103","title":"이슈 103 제목","body":"이슈 103 본문","url":"https://example.test/acme/dat-at/issues/103","labels":["docs"],"issueUpdatedAt":"2026-10-01T00:00:43.000Z"}]
+RESULT {"fetched":3,"enqueued":3}
+# issue (3 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"101","title":"이슈 101 제목","body":null,"url":"https://example.test/acme/dat-at/issues/101","labels":"","status":"pending","issueUpdatedAt":"2026-10-01T00:00:41.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:36:14.277Z","updatedAt":"2026-10-12T11:36:14.277Z"}
+{"id":2,"repository":"acme/dat-at","issueId":"102","title":"이슈 102 제목","body":"이슈 102 본문","url":"https://example.test/acme/dat-at/issues/102","labels":"bug,automate","status":"pending","issueUpdatedAt":"2026-10-01T00:00:42.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:36:14.292Z","updatedAt":"2026-10-12T11:36:14.292Z"}
+{"id":3,"repository":"acme/dat-at","issueId":"103","title":"이슈 103 제목","body":"이슈 103 본문","url":"https://example.test/acme/dat-at/issues/103","labels":"docs","status":"pending","issueUpdatedAt":"2026-10-01T00:00:43.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:36:14.304Z","updatedAt":"2026-10-12T11:36:14.304Z"}
+# prompt_version (0 rows)
+보충: TypeORM으로 읽은 labels
+LABELS_VIA_TYPEORM [{"issueId":"101","labels":[]},{"issueId":"102","labels":["bug","automate"]},{"issueId":"103","labels":["docs"]}]
+--- at01_mig (DB_SYNCHRONIZE=false)
+createdb at01_mig
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+{"count":"0"}
+(1 rows)
+SOURCE [{"repository":"acme/dat-at","issueId":"101","title":"이슈 101 제목","body":null,"url":"https://example.test/acme/dat-at/issues/101","labels":[],"issueUpdatedAt":"2026-10-01T00:00:41.000Z"},{"repository":"acme/dat-at","issueId":"102","title":"이슈 102 제목","body":"이슈 102 본문","url":"https://example.test/acme/dat-at/issues/102","labels":["bug","automate"],"issueUpdatedAt":"2026-10-01T00:00:42.000Z"},{"repository":"acme/dat-at","issueId":"103","title":"이슈 103 제목","body":"이슈 103 본문","url":"https://example.test/acme/dat-at/issues/103","labels":["docs"],"issueUpdatedAt":"2026-10-01T00:00:43.000Z"}]
+RESULT {"fetched":3,"enqueued":3}
+# issue (3 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"101","title":"이슈 101 제목","body":null,"url":"https://example.test/acme/dat-at/issues/101","labels":"","status":"pending","issueUpdatedAt":"2026-10-01T00:00:41.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:36:17.787Z","updatedAt":"2026-10-12T11:36:17.787Z"}
+{"id":2,"repository":"acme/dat-at","issueId":"102","title":"이슈 102 제목","body":"이슈 102 본문","url":"https://example.test/acme/dat-at/issues/102","labels":"bug,automate","status":"pending","issueUpdatedAt":"2026-10-01T00:00:42.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:36:17.801Z","updatedAt":"2026-10-12T11:36:17.801Z"}
+{"id":3,"repository":"acme/dat-at","issueId":"103","title":"이슈 103 제목","body":"이슈 103 본문","url":"https://example.test/acme/dat-at/issues/103","labels":"docs","status":"pending","issueUpdatedAt":"2026-10-01T00:00:43.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:36:17.816Z","updatedAt":"2026-10-12T11:36:17.816Z"}
+# prompt_version (0 rows)
+보충: TypeORM으로 읽은 labels
+LABELS_VIA_TYPEORM [{"issueId":"101","labels":[]},{"issueId":"102","labels":["bug","automate"]},{"issueId":"103","labels":["docs"]}]
+--- diff stable sync vs mig
+NO DIFF

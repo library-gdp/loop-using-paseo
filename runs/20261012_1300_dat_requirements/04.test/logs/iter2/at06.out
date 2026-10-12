@@ -1,0 +1,22 @@
+===== AT-06 =====
+createdb at06_mig
+[1] boot (DB_SYNCHRONIZE=false)
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+[2] tables
+{"table_name":"issue"}
+{"table_name":"migrations"}
+{"table_name":"prompt_version"}
+(3 rows)
+[3] migrations 이력
+{"id":1,"timestamp":"1791802800000","name":"InitialSchema1791802800000"}
+(1 rows)
+[4] 저장소의 마이그레이션
+1791802800000-InitialSchema.ts
+index.ts
+MigrationInterface 구현 파일 수: 1
+export const migrations = [InitialSchema1791802800000];
+[5] schema dump
+lines=52

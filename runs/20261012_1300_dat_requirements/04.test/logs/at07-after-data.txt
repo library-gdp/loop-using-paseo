@@ -1,0 +1,4 @@
+# issue (1 rows)
+{"id":1,"repository":"acme/dat-at","issueId":"701","title":"AT-07 이슈","body":null,"url":"https://example.test/701","labels":"","status":"pending","issueUpdatedAt":"2026-10-01T00:00:00.000Z","result":null,"workspaceId":null,"agentId":null,"branch":null,"promptVersion":null,"summary":null,"error":null,"startedAt":null,"finishedAt":null,"createdAt":"2026-10-12T11:19:10.488Z","updatedAt":"2026-10-12T11:19:10.488Z"}
+# prompt_version (1 rows)
+{"id":1,"version":1,"content":"AT #{{issueId}} {{title}}","description":null,"createdAt":"2026-10-12T11:19:10.324Z"}

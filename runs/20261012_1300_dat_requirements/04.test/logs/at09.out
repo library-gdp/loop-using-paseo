@@ -1,0 +1,15 @@
+===== AT-09 =====
+[1] diff schema-sync.txt schema-migration.txt
+NO DIFF
+createdb at09_mig
+[2] boot DB_SYNCHRONIZE=false
+exit=1
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"migration","appliedCount":1,"applied":["InitialSchema1791802800000"]}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+[3] boot DB_SYNCHRONIZE=true
+exit=1
+level=30 msg="loop-using-paseo 기동" {}
+level=30 msg="DB 스키마 준비 완료" {"schemaMode":"synchronize"}
+level=60 msg="기동 실패" {"err":{"type":"PromptHistoryEmptyError","message":"prompt_version 이력이 비어 있습니다. README \"프롬프트 변경\" 절의 SQL로 프롬프트를 등록한 뒤 다시 기동하세요."}}
+diff at09-before.txt at09-after.txt
+NO DIFF
